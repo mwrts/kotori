@@ -115,18 +115,23 @@ async function lookupWord(keyword) {
     const targetUrl = 'https://jisho.org/api/v1/search/words?keyword=' + encodeURIComponent(keyword);
     const fallbackProxies = [
         `https://api.codetabs.com/v1/proxy?quest=${targetUrl}`,
-        `https://thingproxy.freeboard.io/fetch/${targetUrl}`
+        `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`
     ];
 
     for (let proxy of fallbackProxies) {
         try {
+            console.log(`attempting jisho lookup via: ${proxy}`);
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3500);
+            const timeoutId = setTimeout(() => controller.abort(), 4000); 
             
             const res = await fetch(proxy, { signal: controller.signal });
             clearTimeout(timeoutId);
             
-            if (!res.ok) continue;
+            if (!res.ok) {
+                console.warn(`proxy ${proxy} returned status ${res.status}`);
+                continue;
+            }
             let parsed = await res.json();
             
             if (parsed && parsed.data && parsed.data.length > 0) {
@@ -137,10 +142,11 @@ async function lookupWord(keyword) {
                     is_common: item.is_common,
                     jlpt: item.jlpt
                 };
+                console.log(`jisho lookup successful via ${proxy}`);
                 break;
             }
         } catch (e) {
-            console.warn(`Jisho API timeout/error via proxy, attempting next...`);
+            console.warn(`jisho proxy error (${proxy}): ${e.message}`);
         }
     }
     
