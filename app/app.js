@@ -815,10 +815,10 @@ function renderReader() {
     if(!doc) return;
 
     let p = document.createElement('p');
+    p.className = 'whitespace-pre-wrap'; 
     appState.parsedBlocks.forEach((block, index) => {
         if (block.surface === '\n') {
-            article.appendChild(p);
-            p = document.createElement('p');
+            p.appendChild(document.createElement('br'));
             return;
         }
 
