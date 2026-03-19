@@ -262,6 +262,14 @@ function setupListeners() {
         creditsBtn.addEventListener('click', () => creditsModal.classList.remove('hidden-view'));
         document.getElementById('btn-close-credits').addEventListener('click', () => creditsModal.classList.add('hidden-view'));
     }
+
+    // Dict Mobile Sidebar Close
+    const closeDictBtn = document.getElementById('btn-close-dict');
+    if(closeDictBtn) {
+        closeDictBtn.addEventListener('click', () => {
+            document.getElementById('dict-sidebar').classList.add('translate-y-full');
+        });
+    }
     
     // Profile Save
     const profileSave = document.getElementById('btn-save-profile');
@@ -396,13 +404,21 @@ function setupListeners() {
                 });
             }
             saveData();
-            renderReader(); // updates the yellow underline
             
-            const btn = document.getElementById(statusStr === 'learning' ? 'btn-save-learning' : 'btn-save-mastered');
+            // Refresh sidebar UI and Reader underlines
+            renderReader(); 
+            updateSidebarInfo(block, appState.selectedBlockIndex);
+            
+            const btnId = statusStr === 'learning' ? 'btn-save-learning' : 'btn-save-mastered';
+            const btn = document.getElementById(btnId);
             if(btn) {
-                const ogHtml = btn.innerHTML;
+                const ogContent = btn.innerHTML;
                 btn.innerHTML = `<span class="material-symbols-outlined text-sm mb-1">check</span> saved!`;
-                setTimeout(() => { btn.innerHTML = ogHtml; }, 2000);
+                btn.classList.add('ring-2', 'ring-primary');
+                setTimeout(() => { 
+                    btn.innerHTML = ogContent; 
+                    btn.classList.remove('ring-2', 'ring-primary');
+                }, 1500);
             }
         }
     }
@@ -429,10 +445,16 @@ function setupListeners() {
                 if (appState.selectedBlockIndex !== null) {
                     appState.selectedBlockIndex = null;
                     renderReader();
+                    
+                    // Reset Sidebar UI
                     document.getElementById('def-word').innerText = '-';
                     document.getElementById('def-reading').innerText = '-';
                     document.getElementById('def-meaning').innerText = 'select a word to view info';
-                    document.getElementById('def-context').parentElement.style.display = 'none';
+                    document.getElementById('def-context').parentElement.parentElement.style.display = 'block';
+                    document.getElementById('def-context').innerText = '-';
+                    
+                    // Close mobile sheet
+                    document.getElementById('dict-sidebar').classList.add('translate-y-full');
                 }
             }
         });
@@ -731,9 +753,62 @@ function renderPracticeCard() {
     }
 }
 
+function updateSidebarInfo(block, index, def = null) {
+    if (appState.selectedBlockIndex !== index) return;
+    
+    const lookupQuery = block.surface;
+    document.getElementById('def-word').innerText = block.surface;
+    document.getElementById('def-reading').innerText = kKataToHira(block.reading) || block.surface;
+    
+    // Show status/folder context immediately
+    const existingWord = appState.savedWords.find(w => w.word === block.surface);
+    const folderName = existingWord ? (appState.folders.find(f => f.id === existingWord.folderId)?.name || 'general') : '-';
+    
+    const contextEl = document.getElementById('def-context');
+    if (existingWord) {
+        contextEl.innerText = `status: ${existingWord.status} (${folderName})`;
+        contextEl.parentElement.parentElement.style.display = 'block';
+    } else {
+        contextEl.innerText = '-';
+    }
+
+    if (!def) {
+        document.getElementById('def-meaning').innerText = 'loading definition...';
+    } else {
+        const mainSense = def.senses && def.senses.length > 0 ? def.senses[0] : null;
+        if (mainSense) {
+            const meaningText = mainSense.english_definitions[0].toLowerCase();
+            const posText = mainSense.parts_of_speech && mainSense.parts_of_speech.length > 0 
+                          ? mainSense.parts_of_speech.join(', ').toLowerCase() : '';
+            if (posText) {
+                document.getElementById('def-meaning').innerHTML = `<span class="text-primary/60 text-[10px] uppercase font-bold tracking-widest block mb-1">${posText}</span>${meaningText}`;
+            } else {
+                document.getElementById('def-meaning').innerText = meaningText;
+            }
+        } else {
+            document.getElementById('def-meaning').innerText = 'no exact meaning found.';
+        }
+        
+        const baseContent = block.tokens.map(t => t.basic_form !== '*' ? t.basic_form : t.surface_form).join('');
+        const ctxParent = contextEl.parentElement.parentElement;
+        if (baseContent !== lookupQuery && baseContent) {
+            ctxParent.style.display = 'block';
+            contextEl.innerText = baseContent + (existingWord ? ` [status: ${existingWord.status}]` : '');
+        }
+
+        if (def.is_common) {
+             const jlptSpan = document.createElement('span');
+             jlptSpan.className = 'px-3 py-1 bg-[#aed18f]/20 text-[#aed18f] rounded ml-2 text-xs uppercase font-bold align-middle';
+             const jlptStr = (def.jlpt && def.jlpt.length > 0) ? def.jlpt[0].toUpperCase().replace('-','') : 'COMMON';
+             jlptSpan.innerText = jlptStr;
+             document.getElementById('def-word').appendChild(jlptSpan);
+        }
+    }
+}
+
 function renderReader() {
     const doc = appState.docs.find(d => d.id === appState.activeDocId);
-    document.getElementById('reader-title').innerText = doc ? doc.title : 'No Document';
+    document.getElementById('reader-title').innerText = doc ? doc.title : 'no document';
     const article = document.getElementById('reader-content');
     article.innerHTML = '';
     
@@ -754,7 +829,6 @@ function renderReader() {
             span.className = 'interactive-word inline-block';
             if (appState.selectedBlockIndex === index) span.classList.add('active-word');
             
-            // Yellow underline if word is in 'learning' status
             const isLearning = appState.savedWords.some(w => w.word === block.surface && w.status === 'learning');
             if (isLearning) {
                 span.classList.add('underline', 'decoration-yellow-400/50', 'decoration-2', 'underline-offset-4');
@@ -769,26 +843,25 @@ function renderReader() {
             span.innerHTML = resultHtml;
 
             span.addEventListener('click', async () => {
+                const isAlreadySelected = appState.selectedBlockIndex === index;
                 appState.selectedBlockIndex = index;
                 renderReader();
                 
-                const lookupQuery = block.surface;
-                document.getElementById('def-word').innerText = block.surface;
-                document.getElementById('def-reading').innerText = kKataToHira(block.reading) || block.surface;
-                document.getElementById('def-meaning').innerText = 'Loading definition...';
-                
-                // Show which folder it's in or context
-                const existingWord = appState.savedWords.find(w => w.word === block.surface);
-                const folderName = existingWord ? (appState.folders.find(f => f.id === existingWord.folderId)?.name || 'general') : '-';
-                document.getElementById('def-context').innerText = existingWord ? `Status: ${existingWord.status} (${folderName})` : '-';
+                // Open mobile drawer
+                document.getElementById('dict-sidebar').classList.remove('translate-y-full');
 
+                // Initial UI state
+                updateSidebarInfo(block, index);
+                
+                if (isAlreadySelected) return; // Don't re-fetch if already open
+                
+                const lookupQuery = block.surface;
                 let def = appState.defCache[lookupQuery];
                 if (!def) {
                     def = await lookupWord(lookupQuery);
-                    // Fallback to basic forms if surface fails
-                    const baseQuery = block.tokens.map(t => t.basic_form !== '*' ? t.basic_form : t.surface_form).join('');
-                    if(!def && block.tokens.length > 0) {
-                        if (baseQuery !== lookupQuery) def = await lookupWord(baseQuery);
+                    const baseForm = block.tokens && block.tokens.length > 0 ? block.tokens.map(t => t.basic_form !== '*' ? t.basic_form : t.surface_form).join('') : null;
+                    if(!def && baseForm && baseForm !== lookupQuery) {
+                        def = await lookupWord(baseForm);
                     }
                     if (def) {
                         appState.defCache[lookupQuery] = def;
@@ -796,52 +869,9 @@ function renderReader() {
                     }
                 }
 
-                if (def && appState.selectedBlockIndex === index) { 
-                    const mainSense = def.senses && def.senses.length > 0 ? def.senses[0] : null;
-                    if (mainSense) {
-                        const meaningText = mainSense.english_definitions[0].toLowerCase();
-                        const posText = mainSense.parts_of_speech && mainSense.parts_of_speech.length > 0 
-                                      ? mainSense.parts_of_speech.join(', ').toLowerCase() : '';
-                                      
-                        if (posText) {
-                            document.getElementById('def-meaning').innerHTML = `<span class="text-primary/60 text-[10px] uppercase font-bold tracking-widest block mb-1">${posText}</span>${meaningText}`;
-                        } else {
-                            document.getElementById('def-meaning').innerText = meaningText;
-                        }
-                    } else {
-                        document.getElementById('def-meaning').innerText = 'No exact meaning found.';
-                    }
-                    
-                    const baseContent = block.tokens.map(t => t.basic_form !== '*' ? t.basic_form : t.surface_form).join('');
-                    const ctxParent = document.getElementById('def-context').parentElement;
-                    if (baseContent !== lookupQuery && baseContent) {
-                        ctxParent.style.display = 'block';
-                        document.getElementById('def-context').innerText = baseContent;
-                    } else {
-                        ctxParent.style.display = 'none';
-                    }
-                    if (def.is_common) {
-                         const jlptSpan = document.createElement('span');
-                         jlptSpan.className = 'px-3 py-1 bg-[#aed18f]/20 text-[#aed18f] rounded ml-2 text-xs uppercase font-bold align-middle';
-                         const jlptStr = (def.jlpt && def.jlpt.length > 0) ? def.jlpt[0].toUpperCase().replace('-','') : 'COMMON';
-                         jlptSpan.innerText = jlptStr;
-                         document.getElementById('def-word').appendChild(jlptSpan);
-                    }
-                } else if (!def && appState.selectedBlockIndex === index) {
-                    document.getElementById('def-meaning').innerHTML = `
-                        <div class="flex flex-col gap-3 mt-2">
-                            <span class="text-error text-sm">failed to load definition from dictionary.</span>
-                            <div class="flex gap-2">
-                                <button id="btn-retry-def" class="px-3 py-1.5 bg-surface-container-high border border-outline-variant/20 rounded-lg text-xs font-bold hover:bg-surface-bright transition-colors text-on-surface">retry</button>
-                                <a href="mailto:violet@usekotori.com?subject=Dictionary%20Lookup%20Failed&body=Word:%20${encodeURIComponent(lookupQuery)}" class="px-3 py-1.5 bg-error/10 border border-error/20 rounded-lg text-xs font-bold hover:bg-error/20 transition-colors text-error flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">mail</span> report issue</a>
-                            </div>
-                        </div>
-                    `;
-                    document.getElementById('btn-retry-def').addEventListener('click', () => {
-                        span.click();
-                    });
+                if (appState.selectedBlockIndex === index) { 
+                    updateSidebarInfo(block, index, def);
                 }
-
             });
         }
         p.appendChild(span);
