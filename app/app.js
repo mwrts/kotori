@@ -114,11 +114,10 @@ async function lookupWord(keyword) {
     let jishoResponse = null;
     const targetUrl = 'https://jisho.org/api/v1/search/words?keyword=' + encodeURIComponent(keyword);
     
-    // We specifically use /get for allorigins as it's more stable than /raw
     const fallbackProxies = [
+        `https://kotori-proxy.jpgrottextra.workers.dev/?url=${encodeURIComponent(targetUrl)}`,
         `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`,
-        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
-        `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
+        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`
     ];
 
     for (let proxy of fallbackProxies) {
