@@ -153,16 +153,18 @@ async function lookupWord(keyword) {
     const targetUrl = 'https://jisho.org/api/v1/search/words?keyword=' + encodeURIComponent(keyword);
 
     const fallbackProxies = [
-        `https://kotori-proxy.jpgrottextra.workers.dev/?url=${encodeURIComponent(targetUrl)}`,
+        `https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`,
         `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`,
-        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`
+        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
+        `https://kotori-proxy.jpgrottextra.workers.dev/?url=${encodeURIComponent(targetUrl)}`
     ];
 
     for (let proxy of fallbackProxies) {
         try {
             console.log(`attempting jisho lookup via: ${proxy}`);
             const controller = new AbortController();
-            const timeoutMs = 8000; // Increased to 8s for reliability
+            const isSlow = proxy.includes('allorigins.win');
+            const timeoutMs = isSlow ? 8000 : 4000;
             const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
             const res = await fetch(proxy, { signal: controller.signal });
@@ -899,13 +901,7 @@ function updateSidebarInfo(block, index, def = null) {
     if (def === undefined) {
         document.getElementById('def-meaning').innerText = 'loading definition...';
     } else if (!def) {
-        document.getElementById('def-meaning').innerText = 'no exact meaning found.';
-        // Show warning even if no result, as it might be a segmenting error
-        const warnSpan = document.createElement('span');
-        warnSpan.className = 'material-symbols-outlined text-yellow-400 text-xl align-middle ml-2 cursor-help opacity-60 hover:opacity-100 transition-opacity';
-        warnSpan.innerText = 'warning';
-        warnSpan.title = 'no match found. this might be due to a segmenting error. please check manually!';
-        document.getElementById('def-word').appendChild(warnSpan);
+        document.getElementById('def-meaning').innerText = 'meaning not found. please check manually!';
     } else {
         const mainSense = def.senses && def.senses.length > 0 ? def.senses[0] : null;
         if (mainSense) {
@@ -951,7 +947,7 @@ function updateSidebarInfo(block, index, def = null) {
 
 function renderReader() {
     const doc = appState.docs.find(d => d.id === appState.activeDocId);
-    document.getElementById('reader-title').innerHTML = (doc ? doc.title : 'no document') + ' <span class="text-[10px] opacity-20 ml-2">v15</span>';
+    document.getElementById('reader-title').innerHTML = (doc ? doc.title : 'no document') + ' <span class="text-[10px] opacity-20 ml-2">v16</span>';
     const article = document.getElementById('reader-content');
     article.innerHTML = '';
 
