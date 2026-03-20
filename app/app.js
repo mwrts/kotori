@@ -8,10 +8,6 @@ kuromoji.builder({ dicPath: "dict/" }).build((err, _tokenizer) => {
         return;
     }
     tokenizer = _tokenizer;
-    const readyStatus = document.getElementById('ready-status');
-    const readyIndicator = document.getElementById('ready-indicator');
-    if (readyStatus) readyStatus.innerText = "ready to parse";
-    if (readyIndicator) readyIndicator.classList.replace('bg-primary/40', 'bg-primary');
 });
 
 function kKataToHira(str) {
@@ -324,7 +320,7 @@ function setupListeners() {
     // Create Doc
     const createBtn = document.getElementById('btn-create-doc');
     if (createBtn) createBtn.addEventListener('click', () => {
-        if (!tokenizer) { alert('Still loading dictionary...'); return; }
+        if (!tokenizer) { return; }
         const text = document.getElementById('input-text').value;
         const title = document.getElementById('input-title').value || 'Untitled Document';
         if (!text.trim()) return;
@@ -901,7 +897,7 @@ function updateSidebarInfo(block, index, def = null) {
     if (def === undefined) {
         document.getElementById('def-meaning').innerText = 'loading definition...';
     } else if (!def) {
-        document.getElementById('def-meaning').innerText = 'loading. if it takes way too long, please refresh or email violet@usekotori.com to report it';
+        document.getElementById('def-meaning').innerText = 'loading. shouldn\'t take long';
     } else {
         const mainSense = def.senses && def.senses.length > 0 ? def.senses[0] : null;
         if (mainSense) {
@@ -947,7 +943,7 @@ function updateSidebarInfo(block, index, def = null) {
 
 function renderReader() {
     const doc = appState.docs.find(d => d.id === appState.activeDocId);
-    document.getElementById('reader-title').innerHTML = (doc ? doc.title : 'no document') + ' <span class="text-[10px] opacity-20 ml-2">v16</span>';
+    document.getElementById('reader-title').innerHTML = (doc ? doc.title : 'no document') + ' <span class="text-[10px] opacity-20 ml-2">v17</span>';
     const article = document.getElementById('reader-content');
     article.innerHTML = '';
 
@@ -992,11 +988,13 @@ function renderReader() {
                 span.classList.add('select-none');
             }
 
-            const furiParts = extractFurigana(block.surface, block.reading);
             let resultHtml = '';
-            furiParts.forEach(part => {
-                if (part.rt) resultHtml += `<ruby>${part.text}<rt class="text-[0.4em] select-none text-primary/80">${part.rt}</rt></ruby>`;
-                else resultHtml += part.text;
+            (block.tokens || []).forEach(t => {
+                const pieces = extractFurigana(t.surface_form, t.reading);
+                pieces.forEach(p => {
+                    if (p.rt) resultHtml += `<ruby>${p.text}<rt class="text-[0.4em] select-none text-primary/80">${p.rt}</rt></ruby>`;
+                    else resultHtml += p.text;
+                });
             });
             span.innerHTML = resultHtml;
 
@@ -1068,7 +1066,7 @@ function uniteSelectedBlocks() {
         const nextBlock = appState.parsedBlocks[nextIdx];
         if (!currBlock || !nextBlock || currBlock.wordPosition === undefined) continue;
         const insertPos = currBlock.wordPosition - 1 + currBlock.surface.length + offsetAdjustment;
-        doc.text = doc.text.slice(0, insertPos) + '‿' + doc.text.slice(insertPos);
+        doc.text = doc.text.slice(0, insertPos) + '·' + doc.text.slice(insertPos);
         offsetAdjustment += 1;
     }
     appState.multiSelection = []; appState.selectedBlockIndex = null;
