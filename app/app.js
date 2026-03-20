@@ -449,7 +449,7 @@ function setupListeners() {
 
             // Refresh sidebar UI and Reader underlines
             renderReader();
-            updateSidebarInfo(block, appState.selectedBlockIndex);
+            updateSidebarInfo(block, appState.selectedBlockIndex, appState.defCache[lookupQuery]);
 
             const btnId = statusStr === 'learning' ? 'btn-save-learning' : 'btn-save-mastered';
             const btn = document.getElementById(btnId);
@@ -888,13 +888,27 @@ function updateSidebarInfo(block, index, def = null) {
     }
 
     // Show status/folder context immediately
+    const learnBtn = document.getElementById('btn-save-learning');
+    const masterBtn = document.getElementById('btn-save-mastered');
+    
+    // Reset buttons to non-active styles
+    if (learnBtn) learnBtn.className = 'py-3 bg-yellow-400/10 text-yellow-500/80 border border-yellow-400/20 font-bold rounded-lg transition-all flex flex-col items-center justify-center text-xs hover:bg-yellow-400/20';
+    if (masterBtn) masterBtn.className = 'py-3 bg-surface-container-high text-on-surface-variant/60 border border-outline-variant/10 font-bold rounded-lg transition-all flex flex-col items-center justify-center text-xs hover:bg-surface-bright';
+
     const existingWord = appState.savedWords.find(w => w.word === block.surface);
     const folderName = existingWord ? (appState.folders.find(f => f.id === existingWord.folderId)?.name || 'general') : '-';
 
     const contextEl = document.getElementById('def-context');
     if (existingWord) {
-        contextEl.innerText = `status: ${existingWord.status} (${folderName})`;
+        contextEl.innerText = `${existingWord.status} (${folderName})`;
         contextEl.parentElement.parentElement.style.display = 'block';
+        
+        // Highlight active status
+        if (existingWord.status === 'learning' && learnBtn) {
+            learnBtn.className = 'py-3 bg-yellow-400 text-[#543b00] font-bold rounded-lg shadow-lg shadow-yellow-400/20 transition-all flex flex-col items-center justify-center text-xs active:scale-95';
+        } else if (existingWord.status === 'mastered' && masterBtn) {
+            masterBtn.className = 'py-3 bg-primary text-on-primary font-bold rounded-lg shadow-lg shadow-primary/20 transition-all flex flex-col items-center justify-center text-xs active:scale-95';
+        }
     } else {
         contextEl.innerText = '-';
     }
@@ -925,7 +939,7 @@ function updateSidebarInfo(block, index, def = null) {
         const contextElParent = contextEl.parentElement.parentElement;
         if (rootBase && rootBase !== block.surface) {
             contextElParent.style.display = 'block';
-            contextEl.innerText = rootBase + (existingWord ? ` [status: ${existingWord.status}]` : '');
+            contextEl.innerText = rootBase + (existingWord ? ` [${existingWord.status}]` : '');
         }
 
         if (def.is_common) {
@@ -1092,28 +1106,40 @@ function uniteSelectedBlocks() {
     saveData(); loadActiveDoc(); renderReader();
 }
 function exportToFlashcards() {
-    if (appState.savedWords.length === 0) {
-        alert("No words to export!");
+    const isList = appState.practiceMode === 'list';
+    const folderSelectId = isList ? 'practice-select-folder-list' : 'practice-select-folder';
+    const folderId = document.getElementById(folderSelectId)?.value || 'all';
+
+    let wordsToExport = appState.savedWords;
+    let folderName = "all words";
+    
+    if (folderId !== 'all') {
+        wordsToExport = wordsToExport.filter(w => w.folderId === folderId);
+        folderName = appState.folders.find(f => f.id === folderId)?.name || "folder";
+    } else {
+        alert("Please select a specific folder to export.");
         return;
     }
-    
+
+    if (wordsToExport.length === 0) {
+        alert(`No words found in "${folderName}".`);
+        return;
+    }
+
     // Header
     let csvContent = "Word,Reading,Meaning,Status,Folder\n";
-    
-    appState.savedWords.forEach(w => {
-        const folder = appState.folders.find(f => f.id === w.folderId)?.name || 'general';
-        // Escape content (handle commas and quotes)
+    wordsToExport.forEach(w => {
         const word = `"${w.word.replace(/"/g, '""')}"`;
         const reading = `"${w.reading.replace(/"/g, '""')}"`;
         const meaning = `"${w.meaning.replace(/"/g, '""')}"`;
-        csvContent += `${word},${reading},${meaning},${w.status},${folder}\n`;
+        csvContent += `${word},${reading},${meaning},${w.status},${folderName}\n`;
     });
-    
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `kotori_flashcards_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `kotori_${folderName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
