@@ -22,7 +22,7 @@ function kKataToHira(str) {
 }
 
 function extractFurigana(surface, reading) {
-    if (!reading) return [];
+    if (!reading) return [{ text: surface, rt: '' }];
     const hiraReading = kKataToHira(reading);
     if (/^[ぁ-んァ-ンー]+$/.test(surface)) return [{ text: surface, rt: '' }];
     if (!/[\u4e00-\u9faf]/.test(surface)) return [{ text: surface, rt: '' }];
@@ -62,6 +62,10 @@ function segmentText(text) {
     };
 
     for (let token of tokens) {
+        if (token.surface_form === '⌀') {
+            currentBlock = null;
+            continue;
+        }
         const prevToken = currentBlock ? currentBlock.tokens[currentBlock.tokens.length-1] : null;
         const isDependent = 
             token.pos === '助動詞' || 
@@ -955,7 +959,8 @@ function renderReader() {
                         if(!def && rootBase && rootBase !== lookupQuery) {
                             def = await lookupWord(rootBase);
                             if (def) def.isUncertain = true; // Flag for UI warning
-                        }if (def) { appState.defCache[lookupQuery] = def; saveCache(); }
+                        }
+                        if (def) { appState.defCache[lookupQuery] = def; saveCache(); }
                     }
                     if (appState.selectedBlockIndex === index) updateSidebarInfo(block, index, def);
                 });
@@ -988,21 +993,8 @@ async function renderLineTranslation(lineDiv, lineIdx) {
         transEl.className = 'translation-line-wrap flex items-start gap-2 mt-2 group';
         transEl.innerHTML = `
             <div class="translation-text text-sm italic text-on-surface-variant/60 flex-grow opacity-0 transition-opacity duration-500">...</div>
-            <button class="edit-trans opacity-0 group-hover:opacity-60 text-[10px] text-on-surface-variant hover:text-primary transition-all">
-                <span class="material-symbols-outlined text-xs">edit</span>
-            </button>
         `;
         lineDiv.appendChild(transEl);
-        
-        transEl.querySelector('.edit-trans').onclick = () => {
-            const newText = prompt('edit translation (saved locally only):', transEl.querySelector('.translation-text').innerText);
-            if (newText !== null) {
-                if (!appState.transCache) appState.transCache = {};
-                appState.transCache[text] = newText;
-                transEl.querySelector('.translation-text').innerText = newText;
-                saveCache();
-            }
-        };
     }
     
     const textContainer = transEl.querySelector('.translation-text');
