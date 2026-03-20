@@ -61,9 +61,14 @@ function segmentText(text) {
                token.surface_form === '\n';
     };
 
+    let forceJoin = false;
     for (let token of tokens) {
         if (token.surface_form === '⌀') {
             currentBlock = null;
+            continue;
+        }
+        if (token.surface_form === '‿') {
+            forceJoin = true;
             continue;
         }
         const prevToken = currentBlock ? currentBlock.tokens[currentBlock.tokens.length-1] : null;
@@ -72,8 +77,8 @@ function segmentText(text) {
             (token.pos_detail_1 === '非自立' && prevToken && prevToken.pos !== '名詞') || 
             (token.pos_detail_1 === '接尾' && prevToken && prevToken.pos !== '名詞') || 
             (token.pos === '助詞' && prevToken && prevToken.pos !== '名詞') ||
-            (token.surface_form === 'みたい' && prevToken && prevToken.pos === '名詞' ? false : false) || // wait, simpler:
-            (prevToken && prevToken.pos === '接頭詞');
+            (prevToken && prevToken.pos === '接頭詞') ||
+            forceJoin;
         
         // Force split for 'みたい' specifically if following a noun
         let forcedSplit = (token.surface_form === 'みたい' || token.surface_form === 'みたいた') && prevToken && prevToken.pos === '名詞';
@@ -81,12 +86,14 @@ function segmentText(text) {
             currentBlock.surface += token.surface_form;
             currentBlock.reading += token.reading || '';
             currentBlock.tokens.push(token);
+            forceJoin = false;
         } else {
+            forceJoin = false;
             if (isSymbolOrWhitespace(token)) {
                 blocks.push({ surface: token.surface_form, reading: token.reading||'', tokens: [token], isPunct: true });
                 currentBlock = null;
             } else {
-                currentBlock = { surface: token.surface_form, reading: token.reading || '', tokens: [token], isPunct: false };
+                currentBlock = { surface: token.surface_form, reading: token.reading || '', tokens: [token], isPunct: false, wordPosition: token.word_position };
                 blocks.push(currentBlock);
             }
         }
@@ -216,6 +223,7 @@ let appState = {
     // Editor/Reader specific
     parsedBlocks: [],
     selectedBlockIndex: null,
+    multiSelection: [], // Array of indices
     defCache: {},
     
     // Practice
@@ -468,13 +476,52 @@ function setupListeners() {
         });
     }
 
-    // Deselect word in reader when clicking outside
+    // Context Menu Handlers
+    const ctxMenu = document.getElementById('word-context-menu');
+    document.addEventListener('click', () => ctxMenu?.classList.add('hidden'));
+
+    document.getElementById('ctx-divide')?.addEventListener('click', () => {
+        if (appState.selectedBlockIndex === null) return;
+        const block = appState.parsedBlocks[appState.selectedBlockIndex];
+        const chars = [...block.surface];
+        let promptMsg = `Where to divide "${block.surface}"?\nEnter index (1 to ${chars.length-1}):\n`;
+        chars.forEach((c, i) => promptMsg += i + ": " + c + "\n");
+        const idxStr = prompt(promptMsg);
+        const idx = parseInt(idxStr);
+        if (idx > 0 && idx < chars.length) {
+            modifyDocAtBlock(appState.selectedBlockIndex, idx, '⌀');
+        }
+    });
+
+    document.getElementById('ctx-unite')?.addEventListener('click', () => {
+        if (appState.multiSelection.length < 2) {
+            alert("Select multiple words first (Shift + Click)");
+            return;
+        }
+        uniteSelectedBlocks();
+    });
+
     const readerSect = document.querySelector('#reader-view section');
     if (readerSect) {
+        readerSect.addEventListener('contextmenu', (e) => {
+            const wordEl = e.target.closest('.interactive-word');
+            if (wordEl) {
+                e.preventDefault();
+                const idx = parseInt(wordEl.getAttribute('data-index'));
+                appState.selectedBlockIndex = idx;
+                
+                // Show menu
+                ctxMenu.classList.remove('hidden');
+                ctxMenu.style.left = e.pageX + 'px';
+                ctxMenu.style.top = e.pageY + 'px';
+            }
+        });
+
         readerSect.addEventListener('click', (e) => {
             if (!e.target.closest('.interactive-word')) {
-                if (appState.selectedBlockIndex !== null) {
+                if (appState.selectedBlockIndex !== null || appState.multiSelection.length > 0) {
                     appState.selectedBlockIndex = null;
+                    appState.multiSelection = [];
                     renderReader();
                     
                     // Reset Sidebar UI
@@ -892,10 +939,9 @@ function renderReader() {
     lineDiv.appendChild(currentJapaneseLine);
 
     appState.parsedBlocks.forEach((block, index) => {
-        if (block.surface === '\n') {
-            // Append line and create spacer or start new line
+        if (block.surface === '\n' || block.surface === '⌀' || block.surface === '‿') {
+            if (block.surface !== '\n') return;
             article.appendChild(lineDiv);
-
             lineDiv = document.createElement('div');
             lineDiv.className = 'mb-8';
             currentJapaneseLine = document.createElement('div');
@@ -905,6 +951,7 @@ function renderReader() {
         }
 
         const span = document.createElement('span');
+        span.setAttribute('data-index', index);
         if (block.isPunct) {
             span.innerText = block.surface;
             span.className = 'text-on-surface-variant/40';
@@ -913,6 +960,7 @@ function renderReader() {
             if (isVisible) {
                 span.className = 'interactive-word inline-block';
                 if (appState.selectedBlockIndex === index) span.classList.add('active-word');
+                if (appState.multiSelection.includes(index)) span.classList.add('bg-primary/20', 'ring-1', 'ring-primary/40');
                 
                 const isLearning = appState.savedWords.some(w => w.word === block.surface && w.status === 'learning');
                 if (isLearning) {
@@ -931,9 +979,21 @@ function renderReader() {
             span.innerHTML = resultHtml;
 
             if (isVisible) {
-                span.addEventListener('click', async () => {
+                span.addEventListener('click', async (e) => {
+                    if (e.shiftKey) {
+                        e.stopPropagation();
+                        if (appState.multiSelection.includes(index)) {
+                            appState.multiSelection = appState.multiSelection.filter(i => i !== index);
+                        } else {
+                            appState.multiSelection.push(index);
+                        }
+                        renderReader();
+                        return;
+                    }
+
                     const isAlreadySelected = appState.selectedBlockIndex === index;
                     appState.selectedBlockIndex = index;
+                    appState.multiSelection = [];
                     renderReader();
                     document.getElementById('dict-sidebar').classList.remove('translate-y-full');
                     updateSidebarInfo(block, index);
@@ -959,9 +1019,36 @@ function renderReader() {
         currentJapaneseLine.appendChild(span);
     });
     
-    // Final line
     article.appendChild(lineDiv);
-
     const validBlocks = appState.parsedBlocks.filter(b => !b.isPunct);
     document.getElementById('stats-words').innerText = validBlocks.length;
+}
+
+function modifyDocAtBlock(blockIdx, insideOffset, charToInsert) {
+    const doc = appState.docs.find(d => d.id === appState.activeDocId);
+    if (!doc) return;
+    const block = appState.parsedBlocks[blockIdx];
+    if (!block || block.wordPosition === undefined) return;
+    const absolutePos = block.wordPosition - 1 + insideOffset;
+    doc.text = doc.text.slice(0, absolutePos) + charToInsert + doc.text.slice(absolutePos);
+    saveData(); loadActiveDoc(); renderReader();
+}
+
+function uniteSelectedBlocks() {
+    const doc = appState.docs.find(d => d.id === appState.activeDocId);
+    if (!doc) return;
+    const sortedIndices = [...appState.multiSelection].sort((a, b) => a - b);
+    let offsetAdjustment = 0;
+    for (let i = 0; i < sortedIndices.length - 1; i++) {
+        const currIdx = sortedIndices[i];
+        const nextIdx = sortedIndices[i+1];
+        const currBlock = appState.parsedBlocks[currIdx];
+        const nextBlock = appState.parsedBlocks[nextIdx];
+        if (!currBlock || !nextBlock || currBlock.wordPosition === undefined) continue;
+        const insertPos = currBlock.wordPosition - 1 + currBlock.surface.length + offsetAdjustment;
+        doc.text = doc.text.slice(0, insertPos) + '‿' + doc.text.slice(insertPos);
+        offsetAdjustment += 1;
+    }
+    appState.multiSelection = []; appState.selectedBlockIndex = null;
+    saveData(); loadActiveDoc(); renderReader();
 }

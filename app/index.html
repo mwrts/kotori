@@ -535,6 +535,19 @@
         </div>
     </div>
 
+    <!-- Context Menu -->
+    <div id="word-context-menu" class="fixed hidden bg-surface-container/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-[100] py-2 w-48 font-accent lowercase overflow-hidden">
+        <button id="ctx-divide" class="w-full text-left px-4 py-3 hover:bg-primary/20 hover:text-primary transition-all flex items-center gap-3 active:scale-95">
+            <span class="material-symbols-outlined text-lg">content_cut</span>
+            <span class="font-bold">divide word</span>
+        </button>
+        <button id="ctx-unite" class="w-full text-left px-4 py-3 hover:bg-primary/20 hover:text-primary transition-all flex items-center gap-3 active:scale-95 border-t border-white/5">
+            <span class="material-symbols-outlined text-lg">join_inner</span>
+            <span class="font-bold">unite selected</span>
+        </button>
+        <div class="px-4 py-1 text-[9px] text-on-surface-variant/40 uppercase tracking-widest font-bold bg-white/5 mt-1 text-center">segmentation tools</div>
+    </div>
+
     <script src="app.js?v=11"></script>
 </body>
 
