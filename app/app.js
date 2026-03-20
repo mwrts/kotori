@@ -15,7 +15,7 @@ kuromoji.builder({ dicPath: "dict/" }).build((err, _tokenizer) => {
 });
 
 function kKataToHira(str) {
-    return str.replace(/[\u30a1-\u30f6]/g, function(match) {
+    return str.replace(/[\u30a1-\u30f6]/g, function (match) {
         var chr = match.charCodeAt(0) - 0x60;
         return String.fromCharCode(chr);
     });
@@ -42,9 +42,9 @@ function extractFurigana(surface, reading) {
     const kanjiPart = surface.substring(preI, i + 1);
     const readingPart = hiraReading.substring(preJ, j + 1);
     const parts = [];
-    if (prefix) parts.push({ text: prefix, rt: ''});
-    if (kanjiPart) parts.push({ text: kanjiPart, rt: readingPart});
-    if (okurigana) parts.push({ text: okurigana, rt: ''});
+    if (prefix) parts.push({ text: prefix, rt: '' });
+    if (kanjiPart) parts.push({ text: kanjiPart, rt: readingPart });
+    if (okurigana) parts.push({ text: okurigana, rt: '' });
     return parts;
 }
 
@@ -55,31 +55,31 @@ function segmentText(text) {
     let currentBlock = null;
 
     const isSymbolOrWhitespace = (token) => {
-        return token.pos === '記号' || 
-               /^\s+$/.test(token.surface_form) || 
-               token.surface_form === '　' || 
-               token.surface_form === '\n';
+        return token.pos === '記号' ||
+            /^\s+$/.test(token.surface_form) ||
+            token.surface_form === '　' ||
+            token.surface_form === '\n';
     };
 
     let forceJoin = false;
     for (let token of tokens) {
-        if (token.surface_form === '⌀') {
+        if (token.surface_form === '|') {
             currentBlock = null;
             continue;
         }
-        if (token.surface_form === '‿') {
+        if (token.surface_form === '·') {
             forceJoin = true;
             continue;
         }
-        const prevToken = currentBlock ? currentBlock.tokens[currentBlock.tokens.length-1] : null;
-        const isDependent = 
-            (token.pos === '助動詞' && prevToken && prevToken.pos !== '名詞') || 
-            (token.pos_detail_1 === '非自立' && prevToken && prevToken.pos !== '名詞') || 
-            (token.pos_detail_1 === '接尾' && prevToken && prevToken.pos !== '名詞') || 
+        const prevToken = currentBlock ? currentBlock.tokens[currentBlock.tokens.length - 1] : null;
+        const isDependent =
+            (token.pos === '助動詞' && prevToken && prevToken.pos !== '名詞') ||
+            (token.pos_detail_1 === '非自立' && prevToken && prevToken.pos !== '名詞') ||
+            (token.pos_detail_1 === '接尾' && prevToken && prevToken.pos !== '名詞') ||
             (token.pos === '助詞' && prevToken && prevToken.pos !== '名詞') ||
             (prevToken && prevToken.pos === '接頭詞') ||
             forceJoin;
-        
+
         // Force split for 'みたい' specifically if following a noun
         let forcedSplit = (token.surface_form === 'みたい' || token.surface_form === 'みたいた') && prevToken && prevToken.pos === '名詞';
         if (currentBlock && (isDependent || (token.pos === '助詞' && prevToken.pos !== '名詞')) && !isSymbolOrWhitespace(token) && !forcedSplit) {
@@ -90,7 +90,7 @@ function segmentText(text) {
         } else {
             forceJoin = false;
             if (isSymbolOrWhitespace(token)) {
-                blocks.push({ surface: token.surface_form, reading: token.reading||'', tokens: [token], isPunct: true });
+                blocks.push({ surface: token.surface_form, reading: token.reading || '', tokens: [token], isPunct: true });
                 currentBlock = null;
             } else {
                 currentBlock = { surface: token.surface_form, reading: token.reading || '', tokens: [token], isPunct: false, wordPosition: token.word_position };
@@ -102,22 +102,22 @@ function segmentText(text) {
 }
 
 const PARTICLE_DICT = {
-    'は': {pos: 'particle', meaning: 'topic marker'},
-    'が': {pos: 'particle', meaning: 'subject marker'},
-    'を': {pos: 'particle', meaning: 'object marker'},
-    'に': {pos: 'particle', meaning: 'destination, direction, time, indirect object'},
-    'で': {pos: 'particle', meaning: 'by means of, at (location of action)'},
-    'へ': {pos: 'particle', meaning: 'towards, to (direction)'},
-    'から': {pos: 'particle', meaning: 'from (source)'},
-    'まで': {pos: 'particle', meaning: 'until, to (extent)'},
-    'と': {pos: 'particle', meaning: 'and (exhaustive), with (person), quote marker'},
-    'や': {pos: 'particle', meaning: 'and (inexhaustive, such as)'},
-    'の': {pos: 'particle', meaning: 'possessive marker (of, \'s), nominalizer'},
-    'も': {pos: 'particle', meaning: 'also, too'},
-    'ね': {pos: 'particle', meaning: 'isn\'t it? right? (sentence ending)'},
-    'よ': {pos: 'particle', meaning: 'you know! (emphasis at sentence ending)'},
-    'か': {pos: 'particle', meaning: 'question marker or "or"'},
-    'て': {pos: 'particle', meaning: 'conjunctive (linking verbs/actions)'}
+    'は': { pos: 'particle', meaning: 'topic marker' },
+    'が': { pos: 'particle', meaning: 'subject marker' },
+    'を': { pos: 'particle', meaning: 'object marker' },
+    'に': { pos: 'particle', meaning: 'destination, direction, time, indirect object' },
+    'で': { pos: 'particle', meaning: 'by means of, at (location of action)' },
+    'へ': { pos: 'particle', meaning: 'towards, to (direction)' },
+    'から': { pos: 'particle', meaning: 'from (source)' },
+    'まで': { pos: 'particle', meaning: 'until, to (extent)' },
+    'と': { pos: 'particle', meaning: 'and (exhaustive), with (person), quote marker' },
+    'や': { pos: 'particle', meaning: 'and (inexhaustive, such as)' },
+    'の': { pos: 'particle', meaning: 'possessive marker (of, \'s), nominalizer' },
+    'も': { pos: 'particle', meaning: 'also, too' },
+    'ね': { pos: 'particle', meaning: 'isn\'t it? right? (sentence ending)' },
+    'よ': { pos: 'particle', meaning: 'you know! (emphasis at sentence ending)' },
+    'か': { pos: 'particle', meaning: 'question marker or "or"' },
+    'て': { pos: 'particle', meaning: 'conjunctive (linking verbs/actions)' }
 };
 
 const AUX_INFLECTIONS = {
@@ -148,10 +148,10 @@ async function lookupWord(keyword) {
             jlpt: ['jlpt-n5']
         };
     }
-    
+
     let jishoResponse = null;
     const targetUrl = 'https://jisho.org/api/v1/search/words?keyword=' + encodeURIComponent(keyword);
-    
+
     const fallbackProxies = [
         `https://kotori-proxy.jpgrottextra.workers.dev/?url=${encodeURIComponent(targetUrl)}`,
         `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`,
@@ -163,18 +163,18 @@ async function lookupWord(keyword) {
             console.log(`attempting jisho lookup via: ${proxy}`);
             const controller = new AbortController();
             const timeoutMs = 8000; // Increased to 8s for reliability
-            const timeoutId = setTimeout(() => controller.abort(), timeoutMs); 
-            
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
             const res = await fetch(proxy, { signal: controller.signal });
             clearTimeout(timeoutId);
-            
+
             if (!res.ok) {
                 console.warn(`proxy ${proxy} returned status ${res.status}`);
                 continue;
             }
-            
+
             let dataText = await res.text();
-            
+
             // Safety check: if proxy returns HTML (like a 404 or block page) skip it
             if (dataText.trim().startsWith('<')) {
                 console.warn(`proxy ${proxy} leaked HTML, skipping...`);
@@ -182,12 +182,12 @@ async function lookupWord(keyword) {
             }
 
             let parsed = JSON.parse(dataText);
-            
+
             // AllOrigins wraps the result in a "contents" string
             if (proxy.includes('allorigins.win') && parsed.contents) {
                 parsed = JSON.parse(parsed.contents);
             }
-            
+
             if (parsed && parsed.data && parsed.data.length > 0) {
                 const item = parsed.data[0];
                 jishoResponse = {
@@ -205,9 +205,9 @@ async function lookupWord(keyword) {
             console.warn(`jisho proxy fail (${proxy}): ${e.message}`);
         }
     }
-    
+
     // No fallback if Jisho fails
-    
+
     return jishoResponse;
 }
 
@@ -216,16 +216,16 @@ let appState = {
     view: 'home',
     profile: { name: 'student', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDcyAYeh5WiUYCKCdLXODPFYVuwCXVK3cSZTgYUtMsth14BYA-M1vD-Ame9MmN5MBC1qXotcMmuiNL5ZSyhwbHOwm-KY_DpbowC0aD-zfj-nfhTyy5e4kyGyI1M1cAMR7XjjYSi8eekJnwN-YasGnyD0BCtoYBNGYflecTASXZTQM20CGi6XBjBflMCTzyljMG53J6kJdkdm0M3lM0P4eSIOrcReqT_IMR7aPSyqbUqluSNxQJ4I9LT54BrRZTwf2MRGaSeZfgVXbcz' },
     docs: [],
-    folders: [{id: 'default', name: 'general'}],
+    folders: [{ id: 'default', name: 'general' }],
     activeDocId: null,
     savedWords: [],
-    
+
     // Editor/Reader specific
     parsedBlocks: [],
     selectedBlockIndex: null,
     multiSelection: [], // Array of indices
     defCache: {},
-    
+
     // Practice
     practiceMode: 'list',
     currentFlashcardIndex: 0,
@@ -239,23 +239,23 @@ function loadData() {
     if (data) {
         const parsed = JSON.parse(data);
         appState.docs = parsed.docs || [];
-        appState.folders = parsed.folders || [{id: 'default', name: 'general'}];
+        appState.folders = parsed.folders || [{ id: 'default', name: 'general' }];
         appState.savedWords = parsed.savedWords || [];
         appState.profile = parsed.profile || appState.profile;
         if (appState.profile.name === 'zen editorial') appState.profile.name = 'student';
         if (appState.docs.length > 0) appState.activeDocId = appState.docs[0].id;
     }
-    
+
     const cache = localStorage.getItem('kotori_dict_cache');
     if (cache) {
-        try { appState.defCache = JSON.parse(cache); } catch(e){}
+        try { appState.defCache = JSON.parse(cache); } catch (e) { }
     }
 }
 
 function saveCache() {
     try {
         localStorage.setItem('kotori_dict_cache', JSON.stringify(appState.defCache));
-    } catch(e) {
+    } catch (e) {
         console.warn("Storage full, resetting dict cache...");
         appState.defCache = {};
         localStorage.setItem('kotori_dict_cache', '{}');
@@ -287,32 +287,32 @@ function setupListeners() {
     const navItems = ['home', 'documents', 'reader', 'practice'];
     navItems.forEach(n => {
         const el = document.getElementById(`nav-${n}`);
-        if(el) el.addEventListener('click', (e) => { e.preventDefault(); switchView(n); });
+        if (el) el.addEventListener('click', (e) => { e.preventDefault(); switchView(n); });
     });
 
     // Profile Click
     const profileBtn = document.getElementById('profile-btn');
-    if(profileBtn) profileBtn.addEventListener('click', () => switchView('profile'));
+    if (profileBtn) profileBtn.addEventListener('click', () => switchView('profile'));
 
     // Credits Modal
     const creditsBtn = document.getElementById('btn-credits');
     const creditsModal = document.getElementById('credits-modal');
-    if(creditsBtn && creditsModal) {
+    if (creditsBtn && creditsModal) {
         creditsBtn.addEventListener('click', () => creditsModal.classList.remove('hidden-view'));
         document.getElementById('btn-close-credits').addEventListener('click', () => creditsModal.classList.add('hidden-view'));
     }
 
     // Dict Mobile Sidebar Close
     const closeDictBtn = document.getElementById('btn-close-dict');
-    if(closeDictBtn) {
+    if (closeDictBtn) {
         closeDictBtn.addEventListener('click', () => {
             document.getElementById('dict-sidebar').classList.add('translate-y-full');
         });
     }
-    
+
     // Profile Save
     const profileSave = document.getElementById('btn-save-profile');
-    if(profileSave) profileSave.addEventListener('click', () => {
+    if (profileSave) profileSave.addEventListener('click', () => {
         appState.profile.name = document.getElementById('input-profile-name').value || 'student';
         appState.profile.avatar = document.getElementById('input-profile-avatar').value || appState.profile.avatar;
         saveData();
@@ -321,12 +321,12 @@ function setupListeners() {
 
     // Create Doc
     const createBtn = document.getElementById('btn-create-doc');
-    if(createBtn) createBtn.addEventListener('click', () => {
-        if(!tokenizer) { alert('Still loading dictionary...'); return; }
+    if (createBtn) createBtn.addEventListener('click', () => {
+        if (!tokenizer) { alert('Still loading dictionary...'); return; }
         const text = document.getElementById('input-text').value;
         const title = document.getElementById('input-title').value || 'Untitled Document';
-        if(!text.trim()) return;
-        
+        if (!text.trim()) return;
+
         if (appState.activeDocId) {
             const doc = appState.docs.find(d => d.id === appState.activeDocId);
             if (doc) {
@@ -339,7 +339,7 @@ function setupListeners() {
             appState.docs.push(newDoc);
             appState.activeDocId = newDoc.id;
         }
-        
+
         saveData();
         loadActiveDoc();
         switchView('reader');
@@ -347,38 +347,38 @@ function setupListeners() {
 
     // Practice controls
     const flipBtn = document.getElementById('btn-flip');
-    if(flipBtn) flipBtn.addEventListener('click', () => {
+    if (flipBtn) flipBtn.addEventListener('click', () => {
         appState.isFlashcardFlipped = !appState.isFlashcardFlipped;
         renderPracticeCard();
     });
-    
+
     const nextBtn = document.getElementById('btn-next-card');
-    if(nextBtn) nextBtn.addEventListener('click', () => {
-        if(appState.savedWords.length === 0) return;
+    if (nextBtn) nextBtn.addEventListener('click', () => {
+        if (appState.savedWords.length === 0) return;
         appState.currentFlashcardIndex = (appState.currentFlashcardIndex + 1) % appState.savedWords.length;
         appState.isFlashcardFlipped = false;
         renderPracticeCard();
     });
-    
+
     const masterBtn = document.getElementById('btn-master-card');
-    if(masterBtn) masterBtn.addEventListener('click', () => {
+    if (masterBtn) masterBtn.addEventListener('click', () => {
         const words = getFilteredPracticeWords();
-        if(words.length === 0) return;
-        
+        if (words.length === 0) return;
+
         // Find the original word in savedWords array to update it
         const originalWordIndex = appState.savedWords.findIndex(w => w.word === words[appState.currentFlashcardIndex].word);
-        if(originalWordIndex > -1) {
+        if (originalWordIndex > -1) {
             appState.savedWords[originalWordIndex].status = 'mastered';
         }
-        
-        if(appState.currentFlashcardIndex >= words.length - 1) appState.currentFlashcardIndex = 0;
+
+        if (appState.currentFlashcardIndex >= words.length - 1) appState.currentFlashcardIndex = 0;
         appState.isFlashcardFlipped = false;
         saveData();
         renderPracticeCard();
     });
 
     const newFolderBtn = document.getElementById('btn-new-folder');
-    if(newFolderBtn) newFolderBtn.addEventListener('click', () => {
+    if (newFolderBtn) newFolderBtn.addEventListener('click', () => {
         const name = window.prompt("Enter new folder name:");
         if (name && name.trim()) {
             const newFolder = { id: generateId(), name: name.trim().toLowerCase() };
@@ -391,14 +391,14 @@ function setupListeners() {
 
     // Practice filter change
     const practiceSelect = document.getElementById('practice-select-folder');
-    if(practiceSelect) practiceSelect.addEventListener('change', () => {
+    if (practiceSelect) practiceSelect.addEventListener('change', () => {
         appState.currentFlashcardIndex = 0;
         appState.isFlashcardFlipped = false;
         renderPracticeCard();
     });
 
     const practiceSelectList = document.getElementById('practice-select-folder-list');
-    if(practiceSelectList) practiceSelectList.addEventListener('change', () => {
+    if (practiceSelectList) practiceSelectList.addEventListener('change', () => {
         renderPracticeList();
     });
 
@@ -423,48 +423,48 @@ function setupListeners() {
         if (appState.selectedBlockIndex !== null) {
             const block = appState.parsedBlocks[appState.selectedBlockIndex];
             const lookupQuery = block.surface;
-            
+
             let defText = document.getElementById('def-meaning').innerText;
-            if(defText.includes('\n')) defText = defText.split('\n')[1]; // safely get meaning if it has pos span
-            
+            if (defText.includes('\n')) defText = defText.split('\n')[1]; // safely get meaning if it has pos span
+
             const folderId = document.getElementById('select-folder').value || 'default';
-            
+
             const existing = appState.savedWords.find(w => w.word === lookupQuery);
-            if(existing) {
+            if (existing) {
                 existing.status = statusStr;
                 existing.folderId = folderId;
             } else {
-                appState.savedWords.push({ 
-                    word: lookupQuery, 
-                    reading: kKataToHira(block.reading) || lookupQuery, 
+                appState.savedWords.push({
+                    word: lookupQuery,
+                    reading: kKataToHira(block.reading) || lookupQuery,
                     meaning: defText,
                     folderId: folderId,
                     status: statusStr
                 });
             }
             saveData();
-            
+
             // Refresh sidebar UI and Reader underlines
-            renderReader(); 
+            renderReader();
             updateSidebarInfo(block, appState.selectedBlockIndex);
-            
+
             const btnId = statusStr === 'learning' ? 'btn-save-learning' : 'btn-save-mastered';
             const btn = document.getElementById(btnId);
-            if(btn) {
+            if (btn) {
                 const ogContent = btn.innerHTML;
                 btn.innerHTML = `<span class="material-symbols-outlined text-sm mb-1">check</span> saved!`;
                 btn.classList.add('ring-2', 'ring-primary');
-                setTimeout(() => { 
-                    btn.innerHTML = ogContent; 
+                setTimeout(() => {
+                    btn.innerHTML = ogContent;
                     btn.classList.remove('ring-2', 'ring-primary');
                 }, 1500);
             }
         }
     }
-    
+
     document.getElementById('btn-save-learning')?.addEventListener('click', () => saveVocab('learning'));
     document.getElementById('btn-save-mastered')?.addEventListener('click', () => saveVocab('mastered'));
-    
+
     // Jisho
     const jishoBtn = document.getElementById('btn-jisho');
     if (jishoBtn) {
@@ -478,63 +478,88 @@ function setupListeners() {
 
     // Context Menu Handlers
     const ctxMenu = document.getElementById('word-context-menu');
-    document.addEventListener('click', () => ctxMenu?.classList.add('hidden'));
+    document.addEventListener('mousedown', (e) => {
+        if (!e.target.closest('#word-context-menu')) {
+            ctxMenu?.classList.add('hidden');
+        }
+    });
 
-    document.getElementById('ctx-divide')?.addEventListener('click', () => {
+    document.getElementById('ctx-divide')?.addEventListener('click', (e) => {
+        e.stopPropagation();
         if (appState.selectedBlockIndex === null) return;
         const block = appState.parsedBlocks[appState.selectedBlockIndex];
         const chars = [...block.surface];
-        let promptMsg = `Where to divide "${block.surface}"?\nEnter index (1 to ${chars.length-1}):\n`;
+        let promptMsg = `Divide "${block.surface}" at index (1 to ${chars.length - 1}):\n`;
         chars.forEach((c, i) => promptMsg += i + ": " + c + "\n");
         const idxStr = prompt(promptMsg);
         const idx = parseInt(idxStr);
         if (idx > 0 && idx < chars.length) {
-            modifyDocAtBlock(appState.selectedBlockIndex, idx, '⌀');
+            modifyDocAtBlock(appState.selectedBlockIndex, idx, '|');
         }
+        ctxMenu.classList.add('hidden');
     });
 
-    document.getElementById('ctx-unite')?.addEventListener('click', () => {
+    document.getElementById('ctx-select')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = appState.selectedBlockIndex;
+        if (idx === null) return;
+        if (appState.multiSelection.includes(idx)) {
+            appState.multiSelection = appState.multiSelection.filter(i => i !== idx);
+        } else {
+            appState.multiSelection.push(idx);
+        }
+        renderReader();
+        ctxMenu.classList.add('hidden');
+    });
+
+    document.getElementById('ctx-unite')?.addEventListener('click', (e) => {
+        e.stopPropagation();
         if (appState.multiSelection.length < 2) {
-            alert("Select multiple words first (Shift + Click)");
+            alert("Select multiple words first.");
             return;
         }
         uniteSelectedBlocks();
+        ctxMenu.classList.add('hidden');
+    });
+
+    window.addEventListener('contextmenu', (e) => {
+        const wordEl = e.target.closest('.interactive-word');
+        if (wordEl) {
+            e.preventDefault();
+            const idx = parseInt(wordEl.getAttribute('data-index'));
+            appState.selectedBlockIndex = idx;
+
+            // Show menu
+            ctxMenu.classList.remove('hidden');
+            ctxMenu.style.left = e.pageX + 'px';
+            ctxMenu.style.top = e.pageY + 'px';
+
+            // Update "Unite" button visibility/text
+            const uniteBtn = document.getElementById('ctx-unite');
+            if (uniteBtn) uniteBtn.style.display = appState.multiSelection.length >= 2 ? 'flex' : 'none';
+        }
     });
 
     const readerSect = document.querySelector('#reader-view section');
     if (readerSect) {
-        readerSect.addEventListener('contextmenu', (e) => {
-            const wordEl = e.target.closest('.interactive-word');
-            if (wordEl) {
-                e.preventDefault();
-                const idx = parseInt(wordEl.getAttribute('data-index'));
-                appState.selectedBlockIndex = idx;
-                
-                // Show menu
-                ctxMenu.classList.remove('hidden');
-                ctxMenu.style.left = e.pageX + 'px';
-                ctxMenu.style.top = e.pageY + 'px';
-            }
-        });
-
         readerSect.addEventListener('click', (e) => {
-            if (!e.target.closest('.interactive-word')) {
-                if (appState.selectedBlockIndex !== null || appState.multiSelection.length > 0) {
-                    appState.selectedBlockIndex = null;
-                    appState.multiSelection = [];
-                    renderReader();
-                    
-                    // Reset Sidebar UI
-                    document.getElementById('def-word').innerText = '-';
-                    document.getElementById('def-reading').innerText = '-';
-                    document.getElementById('def-meaning').innerText = 'select a word to view info';
-                    document.getElementById('def-context').parentElement.parentElement.style.display = 'block';
-                    document.getElementById('def-context').innerText = '-';
-                    
-                    // Close mobile sheet
-                    document.getElementById('dict-sidebar').classList.add('translate-y-full');
-                }
+        if (!e.target.closest('.interactive-word')) {
+            if (appState.selectedBlockIndex !== null || appState.multiSelection.length > 0) {
+                appState.selectedBlockIndex = null;
+                appState.multiSelection = [];
+                renderReader();
+
+                // Reset Sidebar UI
+                document.getElementById('def-word').innerText = '-';
+                document.getElementById('def-reading').innerText = '-';
+                document.getElementById('def-meaning').innerText = 'select a word to view info';
+                document.getElementById('def-context').parentElement.parentElement.style.display = 'block';
+                document.getElementById('def-context').innerText = '-';
+
+                // Close mobile sheet
+                document.getElementById('dict-sidebar').classList.add('translate-y-full');
             }
+        }
         });
     }
 
@@ -546,9 +571,10 @@ function setupListeners() {
     }
 }
 
+
 function loadActiveDoc() {
     const doc = appState.docs.find(d => d.id === appState.activeDocId);
-    if(doc && tokenizer) {
+    if (doc && tokenizer) {
         appState.parsedBlocks = segmentText(doc.text);
     } else {
         appState.parsedBlocks = [];
@@ -561,17 +587,17 @@ function render() {
     const views = ['home', 'documents', 'creator', 'reader', 'practice', 'profile'];
     views.forEach(v => {
         const el = document.getElementById(`${v}-view`);
-        if(el) {
+        if (el) {
             el.classList.toggle('hidden-view', appState.view !== v);
         }
     });
 
     const activeClass = 'bg-[#292b26] text-[#aed18f] rounded-r-full ml-[-24px] pl-[24px] font-bold';
     const inactiveClass = 'text-[#aed18f]/50 hover:bg-[#292b26]/50 hover:text-[#aed18f] rounded-full group';
-    
+
     ['home', 'documents', 'reader', 'practice'].forEach(n => {
         const navEl = document.getElementById(`nav-${n}`);
-        if(navEl) {
+        if (navEl) {
             // handle "creator" counting as "documents" for nav
             let isActive = appState.view === n || (appState.view === 'creator' && n === 'documents');
             navEl.className = `flex items-center gap-4 py-3 px-6 transition-all ${isActive ? activeClass : inactiveClass}`;
@@ -584,17 +610,17 @@ function render() {
 
     renderFolderSelects();
 
-    if(appState.view === 'home') renderHome();
-    else if(appState.view === 'documents') renderDocumentsList();
-    else if(appState.view === 'creator') {
-         document.getElementById('btn-create-doc-text').innerText = appState.activeDocId ? 'save changes' : 'create document';
+    if (appState.view === 'home') renderHome();
+    else if (appState.view === 'documents') renderDocumentsList();
+    else if (appState.view === 'creator') {
+        document.getElementById('btn-create-doc-text').innerText = appState.activeDocId ? 'save changes' : 'create document';
     }
-    else if(appState.view === 'reader') {
-        if(appState.parsedBlocks.length === 0 && appState.activeDocId && tokenizer) loadActiveDoc();
+    else if (appState.view === 'reader') {
+        if (appState.parsedBlocks.length === 0 && appState.activeDocId && tokenizer) loadActiveDoc();
         renderReader();
     }
-    else if(appState.view === 'practice') renderPracticeSwitch();
-    else if(appState.view === 'profile') renderProfilePage();
+    else if (appState.view === 'practice') renderPracticeSwitch();
+    else if (appState.view === 'profile') renderProfilePage();
 }
 
 function renderHome() {
@@ -614,7 +640,7 @@ function renderHome() {
 function renderDocumentsList() {
     const list = document.getElementById('docs-list-container');
     list.innerHTML = '';
-    if(appState.docs.length === 0) {
+    if (appState.docs.length === 0) {
         list.innerHTML = '<div class="p-8 text-center text-on-surface-variant/50 lowercase">no documents found.</div>';
     } else {
         appState.docs.slice().reverse().forEach(doc => {
@@ -633,33 +659,33 @@ function renderDocumentsList() {
             `;
             list.appendChild(div);
         });
-        
+
         list.querySelectorAll('.btn-read-doc').forEach(btn => btn.addEventListener('click', (e) => {
-             e.stopPropagation();
-             appState.activeDocId = e.currentTarget.getAttribute('data-id');
-             loadActiveDoc(); switchView('reader');
+            e.stopPropagation();
+            appState.activeDocId = e.currentTarget.getAttribute('data-id');
+            loadActiveDoc(); switchView('reader');
         }));
-        
+
         list.querySelectorAll('.btn-del-doc').forEach(btn => btn.addEventListener('click', (e) => {
-             e.stopPropagation();
-             const ids = e.currentTarget.getAttribute('data-id');
-             if(confirm('Delete document?')) {
-                 appState.docs = appState.docs.filter(d => d.id !== ids);
-                 if(appState.activeDocId === ids) appState.activeDocId = null;
-                 saveData(); renderDocumentsList();
-             }
+            e.stopPropagation();
+            const ids = e.currentTarget.getAttribute('data-id');
+            if (confirm('Delete document?')) {
+                appState.docs = appState.docs.filter(d => d.id !== ids);
+                if (appState.activeDocId === ids) appState.activeDocId = null;
+                saveData(); renderDocumentsList();
+            }
         }));
 
         list.querySelectorAll('.btn-edit-doc').forEach(btn => btn.addEventListener('click', (e) => {
-             e.stopPropagation();
-             const ids = e.currentTarget.getAttribute('data-id');
-             const doc = appState.docs.find(d => d.id === ids);
-             if(doc) {
-                 appState.activeDocId = doc.id;
-                 document.getElementById('input-title').value = doc.title;
-                 document.getElementById('input-text').value = doc.text;
-                 switchView('creator');
-             }
+            e.stopPropagation();
+            const ids = e.currentTarget.getAttribute('data-id');
+            const doc = appState.docs.find(d => d.id === ids);
+            if (doc) {
+                appState.activeDocId = doc.id;
+                document.getElementById('input-title').value = doc.title;
+                document.getElementById('input-text').value = doc.text;
+                switchView('creator');
+            }
         }));
     }
 }
@@ -673,8 +699,8 @@ function renderFolderSelects() {
     const selFolder = document.getElementById('select-folder');
     const pracFolder = document.getElementById('practice-select-folder');
     const pracListFolder = document.getElementById('practice-select-folder-list');
-    
-    if(selFolder) {
+
+    if (selFolder) {
         const val = selFolder.value;
         selFolder.innerHTML = '';
         appState.folders.forEach(f => {
@@ -682,10 +708,10 @@ function renderFolderSelects() {
             opt.value = f.id; opt.innerText = f.name;
             selFolder.appendChild(opt);
         });
-        if(val && appState.folders.some(f=>f.id===val)) selFolder.value = val;
+        if (val && appState.folders.some(f => f.id === val)) selFolder.value = val;
     }
-    
-    if(pracFolder) {
+
+    if (pracFolder) {
         const val = pracFolder.value;
         pracFolder.innerHTML = '<option value="all">all folders</option>';
         appState.folders.forEach(f => {
@@ -693,10 +719,10 @@ function renderFolderSelects() {
             opt.value = f.id; opt.innerText = f.name;
             pracFolder.appendChild(opt);
         });
-        if(val && (val === 'all' || appState.folders.some(f=>f.id===val))) pracFolder.value = val;
+        if (val && (val === 'all' || appState.folders.some(f => f.id === val))) pracFolder.value = val;
     }
-    
-    if(pracListFolder) {
+
+    if (pracListFolder) {
         const val = pracListFolder.value;
         pracListFolder.innerHTML = '<option value="all">all folders</option>';
         appState.folders.forEach(f => {
@@ -704,14 +730,14 @@ function renderFolderSelects() {
             opt.value = f.id; opt.innerText = f.name;
             pracListFolder.appendChild(opt);
         });
-        if(val && (val === 'all' || appState.folders.some(f=>f.id===val))) pracListFolder.value = val;
+        if (val && (val === 'all' || appState.folders.some(f => f.id === val))) pracListFolder.value = val;
     }
 }
 
 function getFilteredPracticeWords() {
     const folderId = document.getElementById('practice-select-folder').value;
     let words = appState.savedWords.filter(w => w.status !== 'mastered'); // only practice learning words
-    if(folderId !== 'all') {
+    if (folderId !== 'all') {
         words = words.filter(w => w.folderId === folderId);
     }
     return words;
@@ -722,18 +748,18 @@ function renderPracticeSwitch() {
     const flashBtn = document.getElementById('btn-practice-flash-mode');
     const listMode = document.getElementById('practice-mode-list');
     const flashMode = document.getElementById('practice-mode-flashcards');
-    
-    if(appState.practiceMode === 'list') {
-        if(listBtn) listBtn.className = 'px-4 py-2 rounded-lg bg-surface text-primary font-bold text-sm transition-colors shadow-sm';
-        if(flashBtn) flashBtn.className = 'px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-highest font-bold text-sm transition-colors';
-        if(listMode) listMode.classList.remove('hidden-view');
-        if(flashMode) flashMode.classList.add('hidden-view');
+
+    if (appState.practiceMode === 'list') {
+        if (listBtn) listBtn.className = 'px-4 py-2 rounded-lg bg-surface text-primary font-bold text-sm transition-colors shadow-sm';
+        if (flashBtn) flashBtn.className = 'px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-highest font-bold text-sm transition-colors';
+        if (listMode) listMode.classList.remove('hidden-view');
+        if (flashMode) flashMode.classList.add('hidden-view');
         renderPracticeList();
     } else {
-        if(flashBtn) flashBtn.className = 'px-4 py-2 rounded-lg bg-surface text-primary font-bold text-sm transition-colors shadow-sm';
-        if(listBtn) listBtn.className = 'px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-highest font-bold text-sm transition-colors';
-        if(flashMode) flashMode.classList.remove('hidden-view');
-        if(listMode) listMode.classList.add('hidden-view');
+        if (flashBtn) flashBtn.className = 'px-4 py-2 rounded-lg bg-surface text-primary font-bold text-sm transition-colors shadow-sm';
+        if (listBtn) listBtn.className = 'px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-highest font-bold text-sm transition-colors';
+        if (flashMode) flashMode.classList.remove('hidden-view');
+        if (listMode) listMode.classList.add('hidden-view');
         renderPracticeCard();
     }
 }
@@ -741,10 +767,10 @@ function renderPracticeSwitch() {
 function renderPracticeList() {
     const folderId = document.getElementById('practice-select-folder-list').value;
     let words = appState.savedWords;
-    if(folderId !== 'all') words = words.filter(w => w.folderId === folderId);
-    
+    if (folderId !== 'all') words = words.filter(w => w.folderId === folderId);
+
     document.getElementById('practice-list-count').innerText = `${words.length} items`;
-    
+
     const container = document.getElementById('practice-full-list');
     container.innerHTML = '';
     words.forEach(w => {
@@ -762,11 +788,11 @@ function renderPracticeList() {
         `;
         container.appendChild(div);
     });
-    
+
     container.querySelectorAll('.btn-del-word').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const ww = e.currentTarget.getAttribute('data-word');
-            if(confirm(`Delete ${ww}?`)) {
+            if (confirm(`Delete ${ww}?`)) {
                 appState.savedWords = appState.savedWords.filter(x => x.word !== ww);
                 saveData();
                 renderPracticeList();
@@ -782,15 +808,15 @@ function renderPracticeCard() {
     const backSubtitle = document.getElementById('flashcard-back-subtitle');
     const backFolder = document.getElementById('flashcard-back-folder');
     const sideList = document.getElementById('practice-side-list');
-    
+
     if (!inner || !frontTitle) return; // fail gracefully when outside practice view
-    
+
     const words = getFilteredPracticeWords();
     const totalWords = appState.savedWords.length;
-    const masteredWords = appState.savedWords.filter(w => w.status==='mastered').length;
-    
+    const masteredWords = appState.savedWords.filter(w => w.status === 'mastered').length;
+
     document.getElementById('practice-word-count').innerHTML = `learning: ${words.length} &middot; master: ${masteredWords}`;
-    
+
     // Sidebar list
     if (sideList) {
         sideList.innerHTML = '';
@@ -803,7 +829,7 @@ function renderPracticeCard() {
         });
     }
 
-    if(words.length === 0) {
+    if (words.length === 0) {
         frontTitle.innerText = "no words";
         backTitle.innerText = "no words";
         backSubtitle.innerText = "-";
@@ -811,11 +837,11 @@ function renderPracticeCard() {
         inner.classList.remove('flipped');
         return;
     }
-    
-    if(appState.currentFlashcardIndex >= words.length) appState.currentFlashcardIndex = 0;
-    
+
+    if (appState.currentFlashcardIndex >= words.length) appState.currentFlashcardIndex = 0;
+
     const word = words[appState.currentFlashcardIndex];
-    if(appState.isFlashcardFlipped) {
+    if (appState.isFlashcardFlipped) {
         inner.classList.add('flipped');
     } else {
         inner.classList.remove('flipped');
@@ -824,7 +850,7 @@ function renderPracticeCard() {
     frontTitle.innerText = word.word;
     backTitle.innerText = word.meaning;
     backSubtitle.innerText = word.reading;
-    
+
     if (backFolder) {
         const fNode = appState.folders.find(f => f.id === word.folderId);
         backFolder.innerText = fNode ? fNode.name : 'general';
@@ -833,10 +859,10 @@ function renderPracticeCard() {
 
 function updateSidebarInfo(block, index, def = null) {
     if (appState.selectedBlockIndex !== index) return;
-    
+
     document.getElementById('def-word').innerText = block.surface;
     document.getElementById('def-reading').innerText = kKataToHira(block.reading) || block.surface;
-    
+
     // Suffix Analysis
     if (block.tokens && block.tokens.length > 1) {
         const inflections = [];
@@ -861,7 +887,7 @@ function updateSidebarInfo(block, index, def = null) {
     // Show status/folder context immediately
     const existingWord = appState.savedWords.find(w => w.word === block.surface);
     const folderName = existingWord ? (appState.folders.find(f => f.id === existingWord.folderId)?.name || 'general') : '-';
-    
+
     const contextEl = document.getElementById('def-context');
     if (existingWord) {
         contextEl.innerText = `status: ${existingWord.status} (${folderName})`;
@@ -884,8 +910,8 @@ function updateSidebarInfo(block, index, def = null) {
         const mainSense = def.senses && def.senses.length > 0 ? def.senses[0] : null;
         if (mainSense) {
             const meaningText = mainSense.english_definitions[0].toLowerCase();
-            const posText = mainSense.parts_of_speech && mainSense.parts_of_speech.length > 0 
-                          ? mainSense.parts_of_speech.join(', ').toLowerCase() : '';
+            const posText = mainSense.parts_of_speech && mainSense.parts_of_speech.length > 0
+                ? mainSense.parts_of_speech.join(', ').toLowerCase() : '';
             if (posText) {
                 document.getElementById('def-meaning').innerHTML = `<span class="text-primary/60 text-[10px] uppercase font-bold tracking-widest block mb-1">${posText}</span>${meaningText}`;
             } else {
@@ -894,11 +920,11 @@ function updateSidebarInfo(block, index, def = null) {
         } else {
             document.getElementById('def-meaning').innerText = 'no meanings listed.';
         }
-        
+
         // Correct base form: use the basic_form of the ROOT token (usually the first one)
         const rootToken = block.tokens && block.tokens.length > 0 ? block.tokens[0] : null;
         const rootBase = rootToken && rootToken.basic_form !== '*' ? rootToken.basic_form : null;
-        
+
         const contextElParent = contextEl.parentElement.parentElement;
         if (rootBase && rootBase !== block.surface) {
             contextElParent.style.display = 'block';
@@ -906,11 +932,11 @@ function updateSidebarInfo(block, index, def = null) {
         }
 
         if (def.is_common) {
-             const jlptSpan = document.createElement('span');
-             jlptSpan.className = 'px-3 py-1 bg-[#aed18f]/20 text-[#aed18f] rounded ml-2 text-xs uppercase font-bold align-middle inline-block h-fit';
-             const jlptStr = (def.jlpt && def.jlpt.length > 0) ? def.jlpt[0].toUpperCase().replace('-','') : 'COMMON';
-             jlptSpan.innerText = jlptStr;
-             document.getElementById('def-word').appendChild(jlptSpan);
+            const jlptSpan = document.createElement('span');
+            jlptSpan.className = 'px-3 py-1 bg-[#aed18f]/20 text-[#aed18f] rounded ml-2 text-xs uppercase font-bold align-middle inline-block h-fit';
+            const jlptStr = (def.jlpt && def.jlpt.length > 0) ? def.jlpt[0].toUpperCase().replace('-', '') : 'COMMON';
+            jlptSpan.innerText = jlptStr;
+            document.getElementById('def-word').appendChild(jlptSpan);
         }
 
         if (def.isUncertain) {
@@ -928,18 +954,18 @@ function renderReader() {
     document.getElementById('reader-title').innerHTML = (doc ? doc.title : 'no document') + ' <span class="text-[10px] opacity-20 ml-2">v15</span>';
     const article = document.getElementById('reader-content');
     article.innerHTML = '';
-    
-    if(!doc) return;
+
+    if (!doc) return;
 
     let lineDiv = document.createElement('div');
     lineDiv.className = 'mb-8';
-    
+
     let currentJapaneseLine = document.createElement('div');
     currentJapaneseLine.className = 'flex flex-wrap items-baseline';
     lineDiv.appendChild(currentJapaneseLine);
 
     appState.parsedBlocks.forEach((block, index) => {
-        if (block.surface === '\n' || block.surface === '⌀' || block.surface === '‿') {
+        if (block.surface === '\n' || block.surface === '|' || block.surface === '·') {
             if (block.surface !== '\n') return;
             article.appendChild(lineDiv);
             lineDiv = document.createElement('div');
@@ -961,7 +987,7 @@ function renderReader() {
                 span.className = 'interactive-word inline-block';
                 if (appState.selectedBlockIndex === index) span.classList.add('active-word');
                 if (appState.multiSelection.includes(index)) span.classList.add('bg-primary/20', 'ring-1', 'ring-primary/40');
-                
+
                 const isLearning = appState.savedWords.some(w => w.word === block.surface && w.status === 'learning');
                 if (isLearning) {
                     span.classList.add('underline', 'decoration-yellow-400/50', 'decoration-2', 'underline-offset-4');
@@ -969,7 +995,7 @@ function renderReader() {
             } else {
                 span.classList.add('select-none');
             }
-            
+
             const furiParts = extractFurigana(block.surface, block.reading);
             let resultHtml = '';
             furiParts.forEach(part => {
@@ -997,16 +1023,16 @@ function renderReader() {
                     renderReader();
                     document.getElementById('dict-sidebar').classList.remove('translate-y-full');
                     updateSidebarInfo(block, index);
-                    
+
                     if (isAlreadySelected) return;
-                    
+
                     const lookupQuery = block.surface;
                     let def = appState.defCache[lookupQuery];
                     if (!def) {
                         def = await lookupWord(lookupQuery);
                         const rootToken = block.tokens && block.tokens.length > 0 ? block.tokens[0] : null;
                         const rootBase = rootToken && rootToken.basic_form !== '*' ? rootToken.basic_form : null;
-                        if(!def && rootBase && rootBase !== lookupQuery) {
+                        if (!def && rootBase && rootBase !== lookupQuery) {
                             def = await lookupWord(rootBase);
                             if (def) def.isUncertain = true; // Flag for UI warning
                         }
@@ -1018,7 +1044,7 @@ function renderReader() {
         }
         currentJapaneseLine.appendChild(span);
     });
-    
+
     article.appendChild(lineDiv);
     const validBlocks = appState.parsedBlocks.filter(b => !b.isPunct);
     document.getElementById('stats-words').innerText = validBlocks.length;
@@ -1041,7 +1067,7 @@ function uniteSelectedBlocks() {
     let offsetAdjustment = 0;
     for (let i = 0; i < sortedIndices.length - 1; i++) {
         const currIdx = sortedIndices[i];
-        const nextIdx = sortedIndices[i+1];
+        const nextIdx = sortedIndices[i + 1];
         const currBlock = appState.parsedBlocks[currIdx];
         const nextBlock = appState.parsedBlocks[nextIdx];
         if (!currBlock || !nextBlock || currBlock.wordPosition === undefined) continue;
