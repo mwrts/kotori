@@ -406,6 +406,9 @@ function setupListeners() {
     document.getElementById('btn-practice-flash-mode')?.addEventListener('click', () => {
         appState.practiceMode = 'flashcards'; renderPracticeSwitch();
     });
+    document.getElementById('btn-export-csv')?.addEventListener('click', () => {
+        exportToFlashcards();
+    });
 
     // New Document button from Home/Docs lists
     document.querySelectorAll('.btn-new-doc').forEach(b => b.addEventListener('click', () => {
@@ -1071,4 +1074,31 @@ function uniteSelectedBlocks() {
     }
     appState.multiSelection = []; appState.selectedBlockIndex = null;
     saveData(); loadActiveDoc(); renderReader();
+}
+function exportToFlashcards() {
+    if (appState.savedWords.length === 0) {
+        alert("No words to export!");
+        return;
+    }
+    
+    // Header
+    let csvContent = "Word,Reading,Meaning,Status,Folder\n";
+    
+    appState.savedWords.forEach(w => {
+        const folder = appState.folders.find(f => f.id === w.folderId)?.name || 'general';
+        // Escape content (handle commas and quotes)
+        const word = `"${w.word.replace(/"/g, '""')}"`;
+        const reading = `"${w.reading.replace(/"/g, '""')}"`;
+        const meaning = `"${w.meaning.replace(/"/g, '""')}"`;
+        csvContent += `${word},${reading},${meaning},${w.status},${folder}\n`;
+    });
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `kotori_flashcards_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
