@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>kotori - Character Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;family=Quicksand:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=Noto+Sans+JP:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary": "#501e3f",
+              "inverse-primary": "#486730",
+              "surface-container-high": "#292b26",
+              "primary-container": "#87a96b",
+              "secondary-fixed": "#d8e8c7",
+              "tertiary-fixed": "#ffd8ec",
+              "surface-tint": "#aed18f",
+              "surface-variant": "#333531",
+              "error-container": "#93000a",
+              "error": "#ffb4ab",
+              "on-secondary-container": "#afbd9e",
+              "on-background": "#e3e3dc",
+              "surface-container-highest": "#333531",
+              "secondary": "#bdcbac",
+              "background": "#121410",
+              "surface-bright": "#383a35",
+              "on-surface": "#e3e3dc",
+              "inverse-surface": "#e3e3dc",
+              "tertiary": "#f8b1da",
+              "surface-container-low": "#1a1c18",
+              "on-error-container": "#ffdad6",
+              "outline": "#8e9285",
+              "on-surface-variant": "#c4c8ba",
+              "on-secondary-fixed-variant": "#3e4b33",
+              "on-primary": "#1b3706",
+              "on-tertiary-fixed": "#360829",
+              "primary": "#aed18f",
+              "inverse-on-surface": "#2f312d",
+              "primary-fixed-dim": "#aed18f",
+              "on-secondary": "#28341e",
+              "tertiary-container": "#cd8bb2",
+              "secondary-container": "#404d35",
+              "on-tertiary-container": "#562445",
+              "surface-dim": "#121410",
+              "surface-container": "#1e201c",
+              "on-primary-fixed": "#0b2000",
+              "tertiary-fixed-dim": "#f8b1da",
+              "on-primary-fixed-variant": "#314e1b",
+              "on-secondary-fixed": "#131f0a",
+              "surface-container-lowest": "#0d0f0b",
+              "surface": "#121410",
+              "outline-variant": "#43483d",
+              "on-tertiary-fixed-variant": "#6a3557",
+              "primary-fixed": "#c9eea9",
+              "secondary-fixed-dim": "#bdcbac",
+              "on-primary-container": "#213d0b",
+              "on-error": "#690005"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Inter"],
+              "label": ["Inter"],
+              "quicksand": ["Quicksand"],
+              "japanese": ["Noto Sans JP"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .lowercase-all {
+            text-transform: lowercase;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body selection:bg-primary-fixed-dim/30">
+<!-- SideNavBar Anchor -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#1a1c18] dark:bg-[#1a1c18] flex flex-col py-6 font-quicksand font-medium text-sm border-r border-outline-variant/10">
+<div class="px-6 mb-8">
+<h1 class="text-xl font-bold text-[#aed18f] lowercase">kotori</h1>
+<p class="text-xs text-on-surface-variant/60 lowercase-all">Learning Japanese</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 text-[#c6c7c0] px-4 py-3 mx-2 hover:bg-[#292b26]/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="lowercase">home</span>
+</a>
+<a class="flex items-center gap-3 text-[#c6c7c0] px-4 py-3 mx-2 hover:bg-[#292b26]/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="lowercase">documents</span>
+</a>
+<a class="flex items-center gap-3 text-[#c6c7c0] px-4 py-3 mx-2 hover:bg-[#292b26]/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span class="lowercase">reader</span>
+</a>
+<!-- Active State: Practice/Characters -->
+<a class="flex items-center gap-3 bg-[#292b26] text-[#aed18f] rounded-lg px-4 py-3 mx-2 translate-x-1 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="fitness_center">fitness_center</span>
+<span class="lowercase">practice</span>
+</a>
+<a class="flex items-center gap-3 text-[#c6c7c0] px-4 py-3 mx-2 hover:bg-[#292b26]/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="forum">forum</span>
+<span class="lowercase">chat</span>
+</a>
+</nav>
+<div class="px-4 mt-auto space-y-1">
+<button class="w-full bg-gradient-to-br from-primary to-primary-container text-on-primary py-3 rounded-xl font-bold lowercase mb-4 transition-all active:scale-95">
+                New Session
+            </button>
+<a class="flex items-center gap-3 text-[#c6c7c0] px-4 py-3 hover:bg-[#292b26]/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="lowercase">settings</span>
+</a>
+<a class="flex items-center gap-3 text-[#c6c7c0] px-4 py-3 hover:bg-[#292b26]/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+<span class="lowercase">help</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen bg-surface-container-low p-8 lg:p-12">
+<header class="max-w-6xl mx-auto mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div class="space-y-2">
+<h2 class="text-4xl font-headline font-bold tracking-tight lowercase">characters</h2>
+<p class="text-on-surface-variant font-quicksand lowercase">curate your ai language partners</p>
+</div>
+<div class="flex gap-4">
+<div class="px-4 py-2 bg-surface-container-highest/30 backdrop-blur-xl border border-outline-variant/15 rounded-full flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="text-xs font-quicksand font-medium lowercase">8 active mentors</span>
+</div>
+</div>
+</header>
+<div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
+<!-- Creation Form Section -->
+<section class="lg:col-span-5 space-y-8">
+<div class="bg-surface-container-lowest rounded-xl p-8 border border-outline-variant/5">
+<h3 class="text-xl font-headline font-semibold mb-6 lowercase">create new character</h3>
+<form class="space-y-6 font-quicksand">
+<div class="space-y-1">
+<label class="text-xs text-on-surface-variant ml-1 lowercase">name</label>
+<input class="w-full bg-surface-container-low border-none rounded-lg p-4 focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-outline-variant/50 text-sm" placeholder="e.g. haruki" type="text"/>
+</div>
+<div class="space-y-1">
+<label class="text-xs text-on-surface-variant ml-1 lowercase">japanese level</label>
+<div class="flex justify-between gap-2">
+<button class="flex-1 py-2 rounded-md bg-surface-container-low border border-outline-variant/20 text-xs font-bold hover:bg-primary-container/20 transition-all" type="button">N5</button>
+<button class="flex-1 py-2 rounded-md bg-surface-container-low border border-outline-variant/20 text-xs font-bold hover:bg-primary-container/20 transition-all" type="button">N4</button>
+<button class="flex-1 py-2 rounded-md bg-primary-container text-on-primary-container text-xs font-bold" type="button">N3</button>
+<button class="flex-1 py-2 rounded-md bg-surface-container-low border border-outline-variant/20 text-xs font-bold hover:bg-primary-container/20 transition-all" type="button">N2</button>
+<button class="flex-1 py-2 rounded-md bg-surface-container-low border border-outline-variant/20 text-xs font-bold hover:bg-primary-container/20 transition-all" type="button">N1</button>
+</div>
+</div>
+<div class="space-y-1">
+<label class="text-xs text-on-surface-variant ml-1 lowercase">definition</label>
+<textarea class="w-full bg-surface-container-low border-none rounded-lg p-4 focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-outline-variant/50 text-sm resize-none" placeholder="describe their personality and background..." rows="3"></textarea>
+</div>
+<div class="space-y-1">
+<label class="text-xs text-on-surface-variant ml-1 lowercase">appearance</label>
+<input class="w-full bg-surface-container-low border-none rounded-lg p-4 focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-outline-variant/50 text-sm" placeholder="e.g. wearing a traditional yukata, standing in a garden" type="text"/>
+</div><div class="space-y-1">
+<label class="text-xs text-on-surface-variant ml-1 lowercase">image</label>
+<div class="relative group">
+<input accept="image/*" class="hidden" id="char-image-upload" type="file"/>
+<label class="flex items-center gap-3 w-full bg-surface-container-low border border-dashed border-outline-variant/30 rounded-lg p-4 cursor-pointer hover:border-primary/50 transition-all" for="char-image-upload">
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">add_photo_alternate</span>
+<span class="text-sm text-outline-variant/70">upload portrait image...</span>
+</label>
+</div>
+</div>
+<div class="space-y-1">
+<label class="text-xs text-on-surface-variant ml-1 lowercase">opening message</label>
+<textarea class="w-full bg-surface-container-low border-none rounded-lg p-4 focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-outline-variant/50 text-sm resize-none font-japanese" placeholder="こんにちは！調子はどうですか？" rows="2"></textarea>
+</div>
+<button class="w-full bg-gradient-to-br from-primary to-primary-container text-on-primary py-4 rounded-lg font-bold lowercase shadow-xl shadow-primary/5 hover:opacity-90 transition-all mt-4" type="submit">
+                            manifest character
+                        </button>
+</form>
+</div>
+</section>
+<!-- Gallery Section -->
+<section class="lg:col-span-7">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+<!-- Character Card 1 -->
+<div class="group relative bg-surface-container rounded-2xl overflow-hidden transition-all hover:-translate-y-1">
+<div class="h-48 overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="portrait of a calm japanese woman with short dark hair in a minimalist modern cafe lighting soft shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAE7Hyzlp0a3sygXLPNppYtm9-tI6ttL566FKgJpW8udmTXVMd6BLXsztHz7k8YeuK_hVwRj0XqlOJT7w-6Yw_EJ6U8AzCJM6B8VNgIEOmrcxt-vyogoD39t1qMUFgsfFzwSfnsEL721NKBG_sSCnk3o8xn3KE9hNdpdKrSAz_WCfXZpxYv4MRrFFD3NbcB9uSVSmvnCrDRbkM9WffnDoVqTRDjV7IFmcnKp_zateVggYSYQhB2TomJldTemgr92HP3I4qWm574c7tr"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container via-transparent to-transparent opacity-60"></div>
+</div>
+<div class="p-6 relative -mt-12 bg-surface-container rounded-t-3xl">
+<div class="flex justify-between items-start mb-2">
+<h4 class="text-lg font-headline font-bold lowercase">yuki</h4>
+<span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-0.5 rounded uppercase">N2</span>
+</div>
+<p class="text-sm text-on-surface-variant font-quicksand line-clamp-2 lowercase">a soft-spoken librarian from kyoto who loves talking about classical literature and tea.</p>
+<div class="mt-4 pt-4 border-t border-outline-variant/10 flex justify-between items-center">
+<span class="text-[10px] text-outline lowercase font-medium">created 2 days ago</span>
+<button class="text-primary hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="edit">edit</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Character Card 2 -->
+<div class="group relative bg-surface-container rounded-2xl overflow-hidden transition-all hover:-translate-y-1">
+<div class="h-48 overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="portrait of a young japanese man wearing a casual linen shirt in a sunlit botanical garden soft focus green background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAECLMV9-Wy2bz1zEYOc9IwKq7E1y0FhgT2nuE510Hg59URh1tjct6Iaf4ZiLQCX-gHIWfoqy9-82GgOOaW9wcFKBtB3B1zwIgl1HVorFS2e6bF-9LZW3rVe2wdZ-rW2e1Hf0BehRTQZ-UV9YVd5i8OglVQ8HGwu8iq4qo36iTRtOuQeU1FYWYLMR3zZOiaPkjF4lH6Yi_eUbzi1RZq1XDZdhwVxWVM9ZwIYysxKQRNcjiPamMiKXEuXNlAM0np_xUp_T9A4clAFeg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container via-transparent to-transparent opacity-60"></div>
+</div>
+<div class="p-6 relative -mt-12 bg-surface-container rounded-t-3xl">
+<div class="flex justify-between items-start mb-2">
+<h4 class="text-lg font-headline font-bold lowercase">kenji</h4>
+<span class="bg-primary-container text-on-primary-container text-[10px] font-bold px-2 py-0.5 rounded uppercase">N4</span>
+</div>
+<p class="text-sm text-on-surface-variant font-quicksand line-clamp-2 lowercase">an enthusiastic street food guide who uses simple grammar and lots of culinary vocabulary.</p>
+<div class="mt-4 pt-4 border-t border-outline-variant/10 flex justify-between items-center">
+<span class="text-[10px] text-outline lowercase font-medium">created 5 days ago</span>
+<button class="text-primary hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="edit">edit</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Character Card 3 -->
+<div class="group relative bg-surface-container rounded-2xl overflow-hidden transition-all hover:-translate-y-1">
+<div class="h-48 overflow-hidden">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="modern japanese woman with glasses in a high-tech office environment cold blue and warm orange lighting cinematic style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBM9CqV9XfXns-Zb2JImoBa9W11wR5qF8Gevfyc67Nbei5nx9M3nAUWfBaWNyM5MKYKTP1X1lky5JMNnFhTkPt0pCJ0qYXXfNKRlSYJBbxjx2IBAus1oBwz9rCKQIKmJdnJrzE0bjKLZRe12PSEhJ-RhXbpmE4T4FMWaaa2LLhGMyLIeEPnBFMnMXQh6zmg6eGFWoxqEykJujVW4YKcX21GKTnMxZxbL4jPZcX5-7PMke2CkLIl9JWXJmFkxnt2o4YVnLpgsPLIvZOn"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container via-transparent to-transparent opacity-60"></div>
+</div>
+<div class="p-6 relative -mt-12 bg-surface-container rounded-t-3xl">
+<div class="flex justify-between items-start mb-2">
+<h4 class="text-lg font-headline font-bold lowercase">akari</h4>
+<span class="bg-tertiary-container text-on-tertiary-container text-[10px] font-bold px-2 py-0.5 rounded uppercase">N1</span>
+</div>
+<p class="text-sm text-on-surface-variant font-quicksand line-clamp-2 lowercase">a sharp tech executive who speaks at a natural pace with business keigo and industry slang.</p>
+<div class="mt-4 pt-4 border-t border-outline-variant/10 flex justify-between items-center">
+<span class="text-[10px] text-outline lowercase font-medium">created 1 week ago</span>
+<button class="text-primary hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="edit">edit</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Placeholder/Empty State -->
+<div class="group flex flex-col items-center justify-center p-8 bg-surface-container-low border-2 border-dashed border-outline-variant/20 rounded-2xl hover:border-primary/40 transition-all cursor-pointer">
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary" data-icon="add">add</span>
+</div>
+<p class="text-sm font-quicksand text-on-surface-variant lowercase">add placeholder slot</p>
+</div>
+</div>
+</section>
+</div>
+</main>
+</body></html>
