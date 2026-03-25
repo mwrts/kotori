@@ -1211,20 +1211,30 @@ function renderReader() {
                     renderReader();
                     document.getElementById('dict-sidebar').classList.remove('translate-y-full');
                     const lookupQuery = block.surface.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1');
-                    let def = appState.defCache[lookupQuery];
+                    // For verbs/adjectives, prefer base form for Jisho lookup
+                    const rootToken = block.tokens && block.tokens.length > 0 ? block.tokens[0] : null;
+                    const rootBase = rootToken && rootToken.basic_form !== '*' ? rootToken.basic_form : null;
+                    const isInflectable = rootToken && (rootToken.pos === '動詞' || rootToken.pos === '形容詞');
+                    const primaryQuery = (isInflectable && rootBase) ? rootBase : lookupQuery;
+                    // Cache key is the primary query so the same base form shares cache
+                    let def = appState.defCache[primaryQuery];
                     updateSidebarInfo(block, index, def);
 
                     if (isAlreadySelected) return;
 
                     if (!def) {
-                        def = await lookupWord(lookupQuery);
-                        const rootToken = block.tokens && block.tokens.length > 0 ? block.tokens[0] : null;
-                        const rootBase = rootToken && rootToken.basic_form !== '*' ? rootToken.basic_form : null;
-                        if (!def && rootBase && rootBase !== lookupQuery) {
-                            def = await lookupWord(rootBase);
-                            if (def) def.isUncertain = true; // Flag for UI warning
+                        def = await lookupWord(primaryQuery);
+                        // Fallback: if base form lookup failed, try the surface form
+                        if (!def && primaryQuery !== lookupQuery) {
+                            def = await lookupWord(lookupQuery);
+                            if (def) def.isUncertain = true;
                         }
-                        if (def) { appState.defCache[lookupQuery] = def; saveCache(); }
+                        // Fallback: if surface form also failed, try the root base (for non-inflectable words)
+                        if (!def && rootBase && rootBase !== lookupQuery && rootBase !== primaryQuery) {
+                            def = await lookupWord(rootBase);
+                            if (def) def.isUncertain = true;
+                        }
+                        if (def) { appState.defCache[primaryQuery] = def; saveCache(); }
                     }
                     if (appState.selectedBlockIndex === index) updateSidebarInfo(block, index, def);
                 });
