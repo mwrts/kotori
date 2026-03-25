@@ -1,4 +1,4 @@
-/** JS Application Logic */
+﻿/** JS Application Logic */
 
 let tokenizer = null;
 
@@ -63,7 +63,7 @@ function segmentText(text) {
 
     // Support manual separators (same as chat logic)
     const hasManualSeparator = text.includes('⌀') || text.includes('|');
-    
+
     if (hasManualSeparator) {
         const separator = text.includes('|') ? '|' : '⌀';
         const parts = text.split(separator);
@@ -75,15 +75,15 @@ function segmentText(text) {
                 runningPos++;
                 continue;
             }
-            
+
             // Still tokenize a version of the part without markup to get POS/Base forms for Jisho
             const plainPart = part.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1');
             const tokens = tokenizer.tokenize(plainPart);
-            
+
             // Check if it's punctuation/whitespace (same 'isWord' spirit as chat)
             const hasJapanese = /[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/.test(plainPart);
             const isPunct = !hasJapanese || (tokens.length === 1 && tokens[0].pos === '記号');
-            
+
             blocks.push({
                 surface: part, // Keep markup for rendering
                 reading: tokens.map(t => t.reading || '').join(''),
@@ -122,15 +122,15 @@ function segmentText(text) {
         const prevToken = currentBlock ? currentBlock.tokens[currentBlock.tokens.length - 1] : null;
         const isDependent =
             prevToken && !isSymbolOrWhitespace(token) && !isSymbolOrWhitespace(prevToken) && (
-            (token.pos === '助動詞' && prevToken.pos !== '名詞') ||
-            (token.pos_detail_1 === '非自立' && prevToken.pos !== '名詞') ||
-            (token.pos_detail_1 === '接尾' && prevToken.pos !== '名詞') ||
-            // Only join て/で particles (conjugation forms like 食べて, 飲んで), not から, の, が, etc.
-            (token.pos === '助詞' && (token.surface_form === 'て' || token.surface_form === 'で') && prevToken.pos !== '名詞') ||
-            (token.pos_detail_2 === '助数詞') || // Counters (一人, 三匹)
-            (token.pos_detail_1 === '数' && (prevToken.pos_detail_1 === '数' || prevToken.pos === '名詞')) || // Numbers
-            (prevToken.pos === '接頭詞') ||
-            forceJoin);
+                (token.pos === '助動詞' && prevToken.pos !== '名詞') ||
+                (token.pos_detail_1 === '非自立' && prevToken.pos !== '名詞') ||
+                (token.pos_detail_1 === '接尾' && prevToken.pos !== '名詞') ||
+                // Only join て/で particles (conjugation forms like 食べて, 飲んで), not から, の, が, etc.
+                (token.pos === '助詞' && (token.surface_form === 'て' || token.surface_form === 'で') && prevToken.pos !== '名詞') ||
+                (token.pos_detail_2 === '助数詞') || // Counters (一人, 三匹)
+                (token.pos_detail_1 === '数' && (prevToken.pos_detail_1 === '数' || prevToken.pos === '名詞')) || // Numbers
+                (prevToken.pos === '接頭詞') ||
+                forceJoin);
 
         // Force split for 'みたい' specifically if following a noun
         let forcedSplit = (token.surface_form === 'みたい' || token.surface_form === 'みたいた') && prevToken && prevToken.pos === '名詞';
@@ -958,11 +958,10 @@ function updateSidebarInfo(block, index, def = null) {
             readings.forEach(r => {
                 const btn = document.createElement('button');
                 const isActive = kKataToHira(r) === displayReading;
-                btn.className = `px-2.5 py-1 rounded-lg text-xs font-japanese font-bold transition-all cursor-pointer ${
-                    isActive
+                btn.className = `px-2.5 py-1 rounded-lg text-xs font-japanese font-bold transition-all cursor-pointer ${isActive
                         ? 'bg-primary text-on-primary-fixed shadow-sm'
                         : 'bg-surface-container-highest text-on-surface-variant hover:bg-surface-bright hover:text-primary border border-outline-variant/20'
-                }`;
+                    }`;
                 btn.innerText = r;
                 btn.addEventListener('click', () => {
                     if (!activeDoc) return;
@@ -1007,7 +1006,7 @@ function updateSidebarInfo(block, index, def = null) {
     // Show status/folder context immediately
     const learnBtn = document.getElementById('btn-save-learning');
     const masterBtn = document.getElementById('btn-save-mastered');
-    
+
     // Reset buttons to neutral gray default
     const neutralClass = 'py-3 bg-surface-container-high text-on-surface-variant/60 border border-outline-variant/10 font-bold rounded-lg transition-all flex flex-col items-center justify-center text-xs hover:bg-surface-bright';
     if (learnBtn) learnBtn.className = neutralClass;
@@ -1020,7 +1019,7 @@ function updateSidebarInfo(block, index, def = null) {
     if (existingWord) {
         contextEl.innerText = `${existingWord.status} (${folderName})`;
         contextEl.classList.remove('opacity-0');
-        
+
         // Highlight active status
         if (existingWord.status === 'learning' && learnBtn) {
             learnBtn.className = 'py-3 bg-yellow-400 text-[#543b00] font-bold rounded-lg shadow-lg shadow-yellow-400/20 transition-all flex flex-col items-center justify-center text-xs active:scale-95';
@@ -1222,32 +1221,32 @@ function modifyDocAtBlock(blockIdx, insideOffset, charToInsert) {
 function uniteSelectedBlocks() {
     const doc = appState.docs.find(d => d.id === appState.activeDocId);
     if (!doc) return;
-    
+
     // Sort indices and filter blocks with valid positions
     const sortedIndices = [...appState.multiSelection]
         .filter(idx => appState.parsedBlocks[idx] && appState.parsedBlocks[idx].wordPosition !== undefined)
         .sort((a, b) => a - b);
-        
+
     if (sortedIndices.length < 2) return;
 
     // Process backwards to avoid shifting offsets of indices we haven't touched yet
     for (let i = sortedIndices.length - 2; i >= 0; i--) {
         const currIdx = sortedIndices[i];
-        const nextIdx = sortedIndices[i+1];
+        const nextIdx = sortedIndices[i + 1];
         const currBlock = appState.parsedBlocks[currIdx];
         const nextBlock = appState.parsedBlocks[nextIdx];
-        
+
         // Start after current block, end at start of next block
         const start = currBlock.wordPosition - 1 + currBlock.surface.length;
         const end = nextBlock.wordPosition - 1;
-        
+
         // Replace everything in front of next block with the joiner
         if (start <= end) {
             doc.text = doc.text.substring(0, start) + '·' + doc.text.substring(end);
         }
     }
-    
-    appState.multiSelection = []; 
+
+    appState.multiSelection = [];
     appState.selectedBlockIndex = null;
     saveData(); loadActiveDoc(); renderReader();
 }
@@ -1258,7 +1257,7 @@ function exportToFlashcards() {
 
     let wordsToExport = appState.savedWords;
     let folderName = "all words";
-    
+
     if (folderId !== 'all') {
         wordsToExport = wordsToExport.filter(w => w.folderId === folderId);
         folderName = appState.folders.find(f => f.id === folderId)?.name || "folder";
