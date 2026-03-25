@@ -125,7 +125,8 @@ function segmentText(text) {
             (token.pos === '助動詞' && prevToken.pos !== '名詞') ||
             (token.pos_detail_1 === '非自立' && prevToken.pos !== '名詞') ||
             (token.pos_detail_1 === '接尾' && prevToken.pos !== '名詞') ||
-            (token.pos === '助詞' && prevToken.pos !== '名詞' && prevToken.pos !== '助詞') ||
+            // Only join て/で particles (conjugation forms like 食べて, 飲んで), not から, の, が, etc.
+            (token.pos === '助詞' && (token.surface_form === 'て' || token.surface_form === 'で') && prevToken.pos !== '名詞') ||
             (token.pos_detail_2 === '助数詞') || // Counters (一人, 三匹)
             (token.pos_detail_1 === '数' && (prevToken.pos_detail_1 === '数' || prevToken.pos === '名詞')) || // Numbers
             (prevToken.pos === '接頭詞') ||
@@ -133,7 +134,7 @@ function segmentText(text) {
 
         // Force split for 'みたい' specifically if following a noun
         let forcedSplit = (token.surface_form === 'みたい' || token.surface_form === 'みたいた') && prevToken && prevToken.pos === '名詞';
-        if (currentBlock && (isDependent || (token.pos === '助詞' && prevToken.pos !== '名詞')) && !isSymbolOrWhitespace(token) && !forcedSplit) {
+        if (currentBlock && isDependent && !isSymbolOrWhitespace(token) && !forcedSplit) {
             currentBlock.surface += token.surface_form;
             currentBlock.reading += token.reading || '';
             currentBlock.tokens.push(token);
