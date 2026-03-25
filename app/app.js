@@ -388,7 +388,7 @@ function setupListeners() {
                 doc.date = Date.now();
             }
         } else {
-            const newDoc = { id: generateId(), title, text, date: Date.now() };
+            const newDoc = { id: generateId(), title, text, date: Date.now(), readingOverrides: {} };
             appState.docs.push(newDoc);
             appState.activeDocId = newDoc.id;
         }
@@ -608,6 +608,7 @@ function setupListeners() {
                     // Reset Sidebar UI
                     document.getElementById('def-word').innerText = '-';
                     document.getElementById('def-reading').innerText = '-';
+                    document.getElementById('def-reading-alts').innerHTML = '';
                     document.getElementById('def-meaning').innerText = 'select a word to view info';
                     document.getElementById('def-context').parentElement.parentElement.style.display = 'block';
                     document.getElementById('def-context').innerText = '-';
@@ -631,6 +632,7 @@ function setupListeners() {
 function loadActiveDoc() {
     const doc = appState.docs.find(d => d.id === appState.activeDocId);
     if (doc && tokenizer) {
+        if (!doc.readingOverrides) doc.readingOverrides = {};
         appState.parsedBlocks = segmentText(doc.text);
     } else {
         appState.parsedBlocks = [];
@@ -917,7 +919,68 @@ function updateSidebarInfo(block, index, def = null) {
     if (appState.selectedBlockIndex !== index) return;
 
     document.getElementById('def-word').innerText = block.surface;
-    document.getElementById('def-reading').innerText = kKataToHira(block.reading) || block.surface;
+
+    // Show the active reading (override or default)
+    const activeDoc = appState.docs.find(d => d.id === appState.activeDocId);
+    const overrideReading = activeDoc && activeDoc.readingOverrides && activeDoc.readingOverrides[index];
+    const displayReading = overrideReading ? kKataToHira(overrideReading) : (kKataToHira(block.reading) || block.surface);
+    document.getElementById('def-reading').innerText = displayReading;
+
+    // Reading alternatives
+    const altsContainer = document.getElementById('def-reading-alts');
+    altsContainer.innerHTML = '';
+    if (def && def.japanese && def.japanese.length > 0) {
+        // Collect unique readings from jisho response
+        const readings = [];
+        const seenReadings = new Set();
+        def.japanese.forEach(j => {
+            const r = j.reading;
+            if (r && !seenReadings.has(r)) {
+                seenReadings.add(r);
+                readings.push(r);
+            }
+        });
+
+        // Also add the tokenizer's original reading if not already included
+        const tokenReading = kKataToHira(block.reading);
+        if (tokenReading && !seenReadings.has(tokenReading)) {
+            readings.unshift(tokenReading);
+        }
+
+        // Only show alternatives if there's more than one reading
+        if (readings.length > 1) {
+            const label = document.createElement('span');
+            label.className = 'text-[9px] text-on-surface-variant/40 uppercase tracking-widest font-bold self-center mr-1';
+            label.innerText = 'readings';
+            altsContainer.appendChild(label);
+
+            readings.forEach(r => {
+                const btn = document.createElement('button');
+                const isActive = kKataToHira(r) === displayReading;
+                btn.className = `px-2.5 py-1 rounded-lg text-xs font-japanese font-bold transition-all cursor-pointer ${
+                    isActive
+                        ? 'bg-primary text-on-primary-fixed shadow-sm'
+                        : 'bg-surface-container-highest text-on-surface-variant hover:bg-surface-bright hover:text-primary border border-outline-variant/20'
+                }`;
+                btn.innerText = r;
+                btn.addEventListener('click', () => {
+                    if (!activeDoc) return;
+                    if (!activeDoc.readingOverrides) activeDoc.readingOverrides = {};
+                    // If clicking the tokenizer's default, remove override
+                    if (kKataToHira(r) === kKataToHira(block.reading)) {
+                        delete activeDoc.readingOverrides[index];
+                    } else {
+                        activeDoc.readingOverrides[index] = r;
+                    }
+                    saveData();
+                    renderReader();
+                    // Re-update sidebar to reflect the new state
+                    updateSidebarInfo(block, index, def);
+                });
+                altsContainer.appendChild(btn);
+            });
+        }
+    }
 
     // Suffix Analysis
     if (block.tokens && block.tokens.length > 1) {
@@ -1070,9 +1133,20 @@ function renderReader() {
             }
 
             let resultHtml = '';
+            // Check for per-block reading override
+            const activeDoc = appState.docs.find(d => d.id === appState.activeDocId);
+            const overrideReading = activeDoc && activeDoc.readingOverrides && activeDoc.readingOverrides[index];
+
             // If the block surface contains markup, process it once for the whole block
             if (block.surface.includes('(') && block.surface.includes(')')) {
-                const pieces = extractFurigana(block.surface, block.reading);
+                const pieces = extractFurigana(block.surface, overrideReading || block.reading);
+                pieces.forEach(p => {
+                    if (p.rt) resultHtml += `<ruby>${p.text}<rt class="text-[0.4em] select-none text-primary/80">${p.rt}</rt></ruby>`;
+                    else resultHtml += p.text;
+                });
+            } else if (overrideReading) {
+                // Use overridden reading for the whole surface as one unit
+                const pieces = extractFurigana(block.surface, overrideReading);
                 pieces.forEach(p => {
                     if (p.rt) resultHtml += `<ruby>${p.text}<rt class="text-[0.4em] select-none text-primary/80">${p.rt}</rt></ruby>`;
                     else resultHtml += p.text;
@@ -1106,12 +1180,12 @@ function renderReader() {
                     appState.multiSelection = [];
                     renderReader();
                     document.getElementById('dict-sidebar').classList.remove('translate-y-full');
-                    updateSidebarInfo(block, index);
+                    const lookupQuery = block.surface.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1');
+                    let def = appState.defCache[lookupQuery];
+                    updateSidebarInfo(block, index, def);
 
                     if (isAlreadySelected) return;
 
-                    const lookupQuery = block.surface.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1');
-                    let def = appState.defCache[lookupQuery];
                     if (!def) {
                         def = await lookupWord(lookupQuery);
                         const rootToken = block.tokens && block.tokens.length > 0 ? block.tokens[0] : null;
